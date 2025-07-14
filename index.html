@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Medallion Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Collection Screen -->
+        <div id="collection-screen" class="screen">
+            <div class="container">
+                <div class="header">
+                    <h1>Pokemon Medallion Collection</h1>
+                    <div class="coins-display">
+                        <i data-lucide="star"></i>
+                        <span id="coins-amount">200</span>
+                        <i data-lucide="star"></i>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="buy-pokemon-btn" class="btn btn-green">
+                        Buy Pokemon (50 coins)
+                    </button>
+                    <button id="battle-mode-btn" class="btn btn-red">
+                        <i data-lucide="swords"></i>
+                        Battle Mode
+                    </button>
+                </div>
+                
+                <div id="collection-grid" class="pokemon-grid">
+                    <!-- Pokemon cards will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Selection Screen -->
+        <div id="team-select-screen" class="screen hidden">
+            <div class="container">
+                <div class="header">
+                    <h1>Select Your Battle Team</h1>
+                    <p>Choose 3 Pokemon for battle (<span id="team-count">0</span>/3 selected)</p>
+                </div>
+                
+                <div class="button-group">
+                    <button id="back-to-collection-btn" class="btn btn-gray">
+                        Back to Collection
+                    </button>
+                    <button id="start-battle-btn" class="btn btn-red" disabled>
+                        <i data-lucide="play"></i>
+                        Start Battle!
+                    </button>
+                </div>
+                
+                <div id="selected-team" class="team-section hidden">
+                    <h2>Selected Team</h2>
+                    <div id="selected-team-grid" class="team-grid">
+                        <!-- Selected team will be displayed here -->
+                    </div>
+                </div>
+                
+                <div id="team-selection-grid" class="pokemon-grid">
+                    <!-- Pokemon cards will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Battle Screen -->
+        <div id="battle-screen" class="screen hidden">
+            <div class="container">
+                <div class="header">
+                    <h1>Battle Arena - Round <span id="current-round">1</span></h1>
+                    <div class="score-display">
+                        <div class="score-item player-score">Player: <span id="player-score">0</span></div>
+                        <div class="score-item opponent-score">Opponent: <span id="opponent-score">0</span></div>
+                    </div>
+                </div>
+
+                <div class="opponent-section">
+                    <h3>Opponent's Pokemon</h3>
+                    <div id="opponent-team-grid" class="team-grid">
+                        <!-- Opponent pokemon will be displayed here -->
+                    </div>
+                </div>
+                
+                <div class="battle-center">
+                    <div id="battle-status" class="battle-status">
+                        Select a Pokemon first!
+                    </div>
+                    
+                    <div id="battle-arena" class="battle-arena">
+                        <div id="arena-content" class="arena-content">
+                            <div class="arena-text">
+                                <div class="arena-title">Battle Arena</div>
+                                <div class="arena-subtitle">Select a Pokemon below</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                
+                <div class="player-section">
+                    <h3>Your Pokemon</h3>
+                    <div id="player-team-grid" class="team-grid">
+                        <!-- Player team will be displayed here -->
+                    </div>
+                </div>
+                
+                <div class="battle-controls">
+                    <button id="forfeit-btn" class="btn btn-gray">
+                        Forfeit Battle
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <div class="container">
+                <div class="game-over-modal">
+                    <h2 id="game-over-title">🏆 Victory!</h2>
+                    <p id="final-score">Final Score: 0 - 0</p>
+                    <p id="game-over-message">Congratulations! You won the battle and earned 100 coins!</p>
+                    <button id="return-to-collection-btn" class="btn btn-blue">
+                        Return to Collection
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Round Result Modal -->
+        <div id="round-result-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="round-result-title">🏆 You Win!</h2>
+                <div id="round-result-pokemon" class="round-result-pokemon">
+                    <!-- Pokemon comparison will be shown here -->
+                </div>
+                <p id="round-result-text">Round 1 complete! Next round starting soon...</p>
+                <div id="battle-log" class="battle-log">
+                    <!-- Battle log will be displayed here -->
+                </div>
+                <div class="progress-bar">
+                    <div id="countdown-bar" class="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="pokemon-data.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
