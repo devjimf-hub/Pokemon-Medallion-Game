@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(start index.html)"
+      "Bash(start index.html)",
+      "Bash(node -e ' *)"
     ]
   }
 }

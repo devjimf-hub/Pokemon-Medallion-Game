@@ -49,8 +49,12 @@
         <div id="team-select-screen" class="screen hidden">
             <div class="container">
                 <div class="header">
-                    <h1>Select Your Team</h1>
-                    <p>Choose 3 Pokemon for battle (<span id="team-count">0</span>/3 selected)</p>
+                    <h1>Medallion Deck Builder</h1>
+                    <div class="rating-comparison">
+                        <div class="rating-chip">YOU: <span id="player-rating-val">1500</span></div>
+                        <div class="rating-chip cpu"><span id="opponent-name-chip">CPU</span>: <span id="opponent-rating-val">1500</span></div>
+                    </div>
+                    <p>Choose 6 Medallions for your deck (<span id="team-count">0</span>/6 selected)</p>
                 </div>
 
                 <div class="button-group">
@@ -61,6 +65,8 @@
                         ⚔️ Start Battle!
                     </button>
                 </div>
+
+                <div id="validation-errors" class="validation-errors hidden"></div>
 
                 <div id="selected-team" class="team-section hidden">
                     <h2>✅ Selected Team</h2>
@@ -84,7 +90,7 @@
                     <div class="score-display">
                         <div class="score-item player-score">YOU: <span id="player-score">0</span></div>
                         <div class="score-sep">VS</div>
-                        <div class="score-item opponent-score">CPU: <span id="opponent-score">0</span></div>
+                        <div class="score-item opponent-score"><span id="opponent-name-score">CPU</span>: <span id="opponent-score">0</span></div>
                     </div>
                 </div>
 
@@ -95,6 +101,10 @@
                     </div>
 
                     <div class="battle-center">
+                        <div class="status-indicators">
+                            <div id="player-status-indicator" class="status-indicator"></div>
+                            <div id="opponent-status-indicator" class="status-indicator"></div>
+                        </div>
                         <div id="battle-status" class="battle-status">Select a Pokemon first!</div>
                         <div id="battle-arena" class="battle-arena">
                             <div id="arena-content" class="arena-content">
@@ -121,7 +131,7 @@
         <!-- Game Over Screen -->
         <div id="game-over-screen" class="screen hidden">
             <div class="container">
-                <div class="game-over-modal">
+                <div id="game-over-modal" class="game-over-modal">
                     <div class="game-over-icon" id="game-over-icon">🏆</div>
                     <h2 id="game-over-title">🏆 Victory!</h2>
                     <p id="final-score">Final Score: 0 - 0</p>
@@ -138,6 +148,7 @@
             <div class="modal-content">
                 <h2 id="round-result-title">🏆 You Win!</h2>
                 <div id="round-result-pokemon" class="round-result-pokemon"></div>
+                <div id="status-log" class="status-log"></div>
                 <p id="round-result-text">Round 1 complete! Next round starting soon...</p>
                 <div id="battle-log" class="battle-log"></div>
                 <div class="progress-bar">
