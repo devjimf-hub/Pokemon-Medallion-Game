@@ -29,6 +29,10 @@ All sounds are loaded lazily and missing files are handled gracefully (no errors
 | `score-orb.mp3` | Score orb flies to scoreboard | ~0.6s |
 | `status-effect.mp3` | Status effect applied | ~0.5s |
 | `ability-trigger.mp3` | Special ability triggered | ~0.6s |
+| `error.mp3` | Validation error or invalid selection | ~0.5s |
+| `lobby-music.mp3` | Background music for menus | Loop |
+| `battle-music.mp3` | Music during battle card selection | Loop |
+| `arena-music.mp3` | High-intensity music during the clash | Loop |
 
 ## Notes
 

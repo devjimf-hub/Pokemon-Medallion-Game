@@ -2,20 +2,93 @@
 const AudioEngine = {
     _enabled: true,
     _volume: 0.5,
-    init() {}, // No preloading to avoid 404 flood if files are missing
+    _bgm: null,
+    _currentBGMName: null,
+    _unlocked: false,
+    init() {
+        // Global interaction recovery: ensures music plays/changes even if blocked by autoplay
+        const handleInteraction = () => {
+            this._unlocked = true;
+            if (this._currentBGMName && (!this._bgm || this._bgm.paused)) {
+                this.playBGM(this._currentBGMName);
+            }
+        };
+        document.addEventListener('click', handleInteraction);
+    },
     play(name) {
         if (!this._enabled) return;
         try {
             const el = new Audio(`sounds/${name}.mp3`);
-            el.volume = this._volume;
+            const volMultiplier = (name === 'card-select') ? 0.6 : 1.0;
+            el.volume = this._volume * volMultiplier;
             el.play().catch(() => {
                 el.src = `sounds/${name}.wav`;
                 el.play().catch(() => {});
             });
         } catch (e) {}
     },
+    playBGM(name) {
+        if (this._currentBGMName === name && this._bgm && !this._bgm.paused) return;
+        // Fade out previous track if it exists
+        if (this._bgm) this._fadeOutAndStop(this._bgm);
+        
+        this._currentBGMName = name;
+        if (!this._enabled) return;
+
+        try {
+            const el = new Audio(`sounds/${name}.mp3`);
+            el.loop = true;
+            el.volume = 0; // Start at zero for fade-in
+            this._bgm = el;
+
+            const targetVol = this._volume * 0.5;
+            el.play().then(() => this._fadeIn(el, targetVol)).catch((err) => {
+                if (err.name !== 'NotAllowedError') {
+                    // Try fallback to .wav if it's a file error, not a block
+                    el.src = `sounds/${name}.wav`;
+                    el.play().then(() => this._fadeIn(el, targetVol)).catch(() => { this._bgm = null; });
+                } else {
+                    this._bgm = null; // Autoplay blocked, handled by handleInteraction
+                }
+            });
+        } catch (e) {}
+    },
+    stopBGM() {
+        if (this._bgm) this._fadeOutAndStop(this._bgm);
+        this._bgm = null;
+        this._currentBGMName = null;
+    },
+    _fadeIn(el, targetVol) {
+        const step = targetVol / 20; // 20 steps over 1 second
+        const timer = setInterval(() => {
+            try {
+                if (el.volume + step >= targetVol) {
+                    el.volume = targetVol;
+                    clearInterval(timer);
+                } else {
+                    el.volume += step;
+                }
+            } catch (e) { clearInterval(timer); }
+        }, 50);
+    },
+    _fadeOutAndStop(el) {
+        const step = el.volume / 16; // 16 steps over 800ms
+        const timer = setInterval(() => {
+            try {
+                if (el.volume - step <= 0) {
+                    el.volume = 0;
+                    el.pause();
+                    clearInterval(timer);
+                } else {
+                    el.volume -= step;
+                }
+            } catch (e) { clearInterval(timer); }
+        }, 50);
+    },
     toggle() {
         this._enabled = !this._enabled;
+        if (!this._enabled) this.stopBGM();
+        else if (this._currentBGMName) this.playBGM(this._currentBGMName);
         return this._enabled;
     },
     setVolume(v) {
@@ -459,14 +532,12 @@ function createPokemonCard(pokemon, context = 'collection') {
 
     if (context === 'teamSelect') {
         const isSelected = gameState.playerTeam.find(p => p.id === pokemon.id);
-        card.addEventListener('click', () => AudioEngine.play('card-select'));
         if (isSelected) {
             content += '<div class="selected-badge">✓ DECKED</div>';
             card.classList.add('disabled');
         }
     } else if (context === 'battle') {
         const isUsed     = gameState.usedPlayerPokemon.includes(pokemon.id);
-        card.addEventListener('click', () => AudioEngine.play('card-select'));
         const isSelected = gameState.selectedPokemon?.id === pokemon.id;
         if (isUsed) {
             card.classList.add('used');
@@ -588,6 +659,14 @@ function showScreen(screenName) {
     Object.values(screens).forEach(s => s.classList.add('hidden'));
     screens[screenName].classList.remove('hidden');
     gameState.screen = screenName;
+
+    if (screenName === 'collection') {
+        AudioEngine.playBGM('lobby-music');
+    } else if (screenName === 'teamSelect') {
+        AudioEngine.playBGM('battle-music');
+    } else if (screenName === 'gameOver') {
+        AudioEngine.stopBGM();
+    }
     initializeLucideIcons();
 }
 
@@ -743,6 +822,7 @@ function syncValidationErrors(team) {
     if (!el) return;
     const errors = validateDeck(team);
     if (errors.length) {
+        AudioEngine.play('error');
         el.textContent = errors[0];
         el.classList.remove('hidden');
         el.style.animation = 'none';
@@ -756,7 +836,10 @@ function syncValidationErrors(team) {
 
 function selectForTeam(pokemon) {
     if (gameState.playerTeam.find(p => p.id === pokemon.id)) return;
-    if (gameState.playerTeam.length >= 6) return;
+    if (gameState.playerTeam.length >= 6) {
+        AudioEngine.play('error');
+        return;
+    }
 
     const proposed = [...gameState.playerTeam, pokemon];
     if (validateDeck(proposed).length > 0) {
@@ -814,6 +897,9 @@ async function startBattle() {
     if (gameState.playerTeam.length !== 6) return;
 
     AudioEngine.play('battle-start');
+    // Trigger music change immediately while user interaction is active
+    AudioEngine.playBGM('arena-music');
+
     const trainerName = TRAINER_NAMES[Math.floor(Math.random() * TRAINER_NAMES.length)];
     gameState.opponentName = trainerName;
 
@@ -1052,7 +1138,7 @@ function renderBattleArena() {
 function selectPokemon(pokemon) {
     if (gameState.usedPlayerPokemon.includes(pokemon.id) || gameState.battleAnimation !== 'waiting') return;
     gameState.selectedPokemon = gameState.selectedPokemon?.id === pokemon.id ? null : pokemon;
-    if (gameState.selectedPokemon) AudioEngine.play('card-select');
+    AudioEngine.play('card-select');
     renderBattle();
 }
 
@@ -1195,6 +1281,7 @@ async function executeOpponentTurn() {
 function startClashSequence() {
     gameState.activeTurn = 'clash';
     gameState.battleAnimation = 'revealing';
+    AudioEngine.playBGM('arena-music');
     gameState.showPoints = false;
     renderBattle();
 
@@ -1704,6 +1791,7 @@ function nextRound() {
         activeTurn: nextFirst,
         whoThrewFirst: nextFirst
     });
+    AudioEngine.playBGM('arena-music');
     renderBattle();
     if (gameState.activeTurn === 'opponent') {
         setTimeout(executeOpponentTurn, 1000);
