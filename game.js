@@ -1,3 +1,28 @@
+// ── Audio Engine ─────────────────────────────────────────────
+const AudioEngine = {
+    _enabled: true,
+    _volume: 0.5,
+    init() {}, // No preloading to avoid 404 flood if files are missing
+    play(name) {
+        if (!this._enabled) return;
+        try {
+            const el = new Audio(`sounds/${name}.mp3`);
+            el.volume = this._volume;
+            el.play().catch(() => {
+                el.src = `sounds/${name}.wav`;
+                el.play().catch(() => {});
+            });
+        } catch (e) {}
+    },
+    toggle() {
+        this._enabled = !this._enabled;
+        return this._enabled;
+    },
+    setVolume(v) {
+        this._volume = Math.max(0, Math.min(1, v));
+    }
+};
+
 // ── Pokemon visual data ──────────────────────────────────────
 const POKEMON_PORTRAITS = {
     Charmander: '🔥', Charizard: '🦎', Squirtle: '💧', Blastoise: '🐢',
@@ -234,15 +259,18 @@ function triggerFloatingBattleTexts() {
     if (!info || !playerCardEl || !opponentCardEl) return;
 
     if (info.playerAdv) {
+        AudioEngine.play('type-advantage');
         createFloatingText(playerCardEl, '+15 ADVANTAGE!', 'advantage');
         createFloatingText(opponentCardEl, 'WEAKNESS!', 'weakness');
     } else if (info.opponentAdv) {
+        AudioEngine.play('type-advantage');
         createFloatingText(opponentCardEl, '+15 ADVANTAGE!', 'advantage');
         createFloatingText(playerCardEl, 'WEAKNESS!', 'weakness');
     }
 
     setTimeout(() => {
         if (info.prevPlayerStatus) {
+            AudioEngine.play('status-effect');
             const status = info.prevPlayerStatus;
             if (status.type === 'paralyzed' && info.playerFinal === 0) {
                 createFloatingText(playerCardEl, '⚡ PARALYZED (→ 0)', 'weakness');
@@ -251,6 +279,7 @@ function triggerFloatingBattleTexts() {
             }
         }
         if (info.prevOpponentStatus) {
+            AudioEngine.play('status-effect');
             const status = info.prevOpponentStatus;
             if (status.type === 'paralyzed' && info.opponentFinal === 0) {
                 createFloatingText(opponentCardEl, '⚡ PARALYZED (→ 0)', 'weakness');
@@ -368,6 +397,7 @@ function launchConfetti() {
 function animateCoinDisplay(from, to) {
     const el = elements.coinsAmount;
     if (!el || from === to) { if (el) el.textContent = to; return; }
+    AudioEngine.play('coins');
     const duration = 550;
     const start = performance.now();
     const diff = to - from;
@@ -429,12 +459,14 @@ function createPokemonCard(pokemon, context = 'collection') {
 
     if (context === 'teamSelect') {
         const isSelected = gameState.playerTeam.find(p => p.id === pokemon.id);
+        card.addEventListener('click', () => AudioEngine.play('card-select'));
         if (isSelected) {
             content += '<div class="selected-badge">✓ DECKED</div>';
             card.classList.add('disabled');
         }
     } else if (context === 'battle') {
         const isUsed     = gameState.usedPlayerPokemon.includes(pokemon.id);
+        card.addEventListener('click', () => AudioEngine.play('card-select'));
         const isSelected = gameState.selectedPokemon?.id === pokemon.id;
         if (isUsed) {
             card.classList.add('used');
@@ -616,7 +648,7 @@ function showPokemonRevealModal(pokemon) {
 
         // Stop float then flip card
         setTimeout(() => modal.querySelector('.reveal-float-wrap').classList.add('stop-float'), 1600);
-        setTimeout(() => modal.querySelector('.reveal-card-inner').classList.add('flipped'), 1700);
+        setTimeout(() => { modal.querySelector('.reveal-card-inner').classList.add('flipped'); AudioEngine.play('card-flip'); }, 1700);
 
         // Show congrats after flip completes
         setTimeout(() => {
@@ -635,6 +667,7 @@ async function buyPokemon() {
     if (gameState.coins < 50) return;
     elements.buyPokemonBtn.disabled = true;
     gameState.coins -= 50;
+    AudioEngine.play('buy');
     updateCoinsDisplay();
 
     const newPokemon = generateRandomPokemon();
@@ -733,12 +766,14 @@ function selectForTeam(pokemon) {
 
     syncValidationErrors(proposed);
     gameState.playerTeam.push(pokemon);
+    AudioEngine.play('card-select');
     renderTeamSelection();
 }
 
 function removeFromTeam(pokemon) {
     gameState.playerTeam = gameState.playerTeam.filter(p => p.id !== pokemon.id);
     syncValidationErrors(gameState.playerTeam);
+    AudioEngine.play('card-select');
     renderTeamSelection();
 }
 
@@ -762,6 +797,7 @@ function showFindingOpponentModal(trainerName) {
         document.body.appendChild(modal);
 
         setTimeout(() => {
+            AudioEngine.play('find-opponent');
             modal.querySelector('.finding-title').textContent = 'Opponent Found!';
             modal.querySelector('.finding-dots').classList.add('hidden');
             modal.querySelector('.found-reveal').classList.remove('hidden');
@@ -777,6 +813,7 @@ function showFindingOpponentModal(trainerName) {
 async function startBattle() {
     if (gameState.playerTeam.length !== 6) return;
 
+    AudioEngine.play('battle-start');
     const trainerName = TRAINER_NAMES[Math.floor(Math.random() * TRAINER_NAMES.length)];
     gameState.opponentName = trainerName;
 
@@ -1015,6 +1052,7 @@ function renderBattleArena() {
 function selectPokemon(pokemon) {
     if (gameState.usedPlayerPokemon.includes(pokemon.id) || gameState.battleAnimation !== 'waiting') return;
     gameState.selectedPokemon = gameState.selectedPokemon?.id === pokemon.id ? null : pokemon;
+    if (gameState.selectedPokemon) AudioEngine.play('card-select');
     renderBattle();
 }
 
@@ -1053,6 +1091,7 @@ async function flyCardToArena(cardEl, side = 'player') {
             2.2
         );
 
+        AudioEngine.play('throw-card');
         // Animate with Web Animations API
         const anim = clone.animate([
             {
@@ -1082,6 +1121,7 @@ async function flyCardToArena(cardEl, side = 'player') {
         anim.onfinish = () => {
             clone.remove();
             // Flash the arena on impact
+            AudioEngine.play('arena-impact');
             elements.battleArena.classList.add('arena-impact');
             setTimeout(() => elements.battleArena.classList.remove('arena-impact'), 420);
             resolve();
@@ -1100,6 +1140,7 @@ async function throwToBattlefield() {
     if (cardEl) {
         cardEl.style.opacity = '0.2';
         cardEl.style.transform = 'scale(0.9)';
+        AudioEngine.play('throw-card');
         await flyCardToArena(cardEl, 'player');
         cardEl.style.opacity = '';
         cardEl.style.transform = '';
@@ -1135,6 +1176,7 @@ async function executeOpponentTurn() {
     const cardEl = elements.opponentTeamGrid.children[pokemonIndex];
 
     if (cardEl) {
+        AudioEngine.play('throw-card');
         await flyCardToArena(cardEl, 'opponent');
     }
 
@@ -1207,6 +1249,7 @@ function startClashSequence() {
 
         playerCardEl?.classList.add('prep-right');
         opponentCardEl?.classList.add('prep-left');
+        AudioEngine.play('charge-up');
 
         setTimeout(() => {
             playerCardEl?.classList.replace('prep-right', 'charge-right');
@@ -1214,6 +1257,7 @@ function startClashSequence() {
 
             // fire impact 500ms into the 0.75s charge animation
             setTimeout(() => {
+                AudioEngine.play('clash');
                 showBattleEffect(pokemon.type, opponentChoice.type);
                 triggerScreenFlash(winner);
 
@@ -1261,9 +1305,11 @@ function startClashSequence() {
         if (info) {
             if (info.playerAdv) {
                 log.push(`🔥 Matchup: ${pokemon.name}'s ${pokemon.type} is Super Effective against ${opponentChoice.name}! (+15 CP)`);
+                AudioEngine.play('type-advantage');
             }
             if (info.opponentAdv) {
                 log.push(`⚡ Matchup: ${opponentChoice.name}'s ${opponentChoice.type} is Super Effective against ${pokemon.name}! (+15 CP)`);
+                AudioEngine.play('type-advantage');
             }
             // Add Special Ability Logs
             if (info.playerAbilityMsg)   log.push(info.playerAbilityMsg);
@@ -1272,13 +1318,16 @@ function startClashSequence() {
         
         if (winner === 'player') {
             spawnScoreOrb('player');
+            AudioEngine.play('round-win');
             gameState.playerScore++;
             log.push(`✓ ${pokemon.name} wins this round!`);
         } else if (winner === 'opponent') {
             spawnScoreOrb('opponent');
+            AudioEngine.play('round-lose');
             gameState.opponentScore++;
             log.push(`✗ ${opponentChoice.name} wins this round!`);
         } else {
+            AudioEngine.play('round-draw');
             log.push("🤝 It's a tie!");
         }
 
@@ -1346,6 +1395,7 @@ function triggerScreenFlash(winner) {
 function dissolveIntoLight(el) {
     if (!el) return;
     el.style.pointerEvents = 'none';
+    AudioEngine.play('dissolve');
     el.animate([
         { filter: 'brightness(1)  blur(0px)',  transform: 'scale(1)',    opacity: '1'   },
         { filter: 'brightness(5)  blur(1px)',  transform: 'scale(1.12)', opacity: '1',  offset: 0.3  },
@@ -1389,6 +1439,7 @@ function spawnScoreOrb(winner) {
     const target = (winner === 'player' ? elements.playerScore : elements.opponentScore).getBoundingClientRect();
     
     const orb = document.createElement('div');
+    AudioEngine.play('score-orb');
     orb.className = 'score-orb';
     orb.style.left = (arena.left + arena.width / 2) + 'px';
     orb.style.top = (arena.top + arena.height / 2) + 'px';
@@ -1408,6 +1459,7 @@ function spawnScoreOrb(winner) {
 function resolveAbility(self, enemy, selfPts, enemyPts, selfAdv, enemyAdv, enemyLabel, usedAbilities) {
     let sp = selfPts, ep = enemyPts, msg = null, newEnemyStatus = null;
     usedAbilities.push(self.name);
+    AudioEngine.play('ability-trigger');
     switch (self.name) {
         case 'Mewtwo':
             ep = Math.round(enemy.points / 2);
@@ -1499,6 +1551,11 @@ function calculateRoundWinner(playerPokemon, opponentPokemon) {
 
     if (playerAdv)   pp += 15;
     if (opponentAdv) op += 15;
+
+    if (prevPlayer || prevOpponent) {
+        // Play status sound if a pre-existing status is affecting the round
+        AudioEngine.play('status-effect');
+    }
 
     const playerResult   = applyStatusEffect(pp, prevPlayer);
     const opponentResult = applyStatusEffect(op, prevOpponent);
@@ -1658,20 +1715,23 @@ function endGame() {
     const won    = gameState.playerScore > gameState.opponentScore;
     const isDraw = gameState.playerScore === gameState.opponentScore;
 
-    if (won) { gameState.coins += 100; updateCoinsDisplay(); }
+    if (won) { AudioEngine.play('victory'); gameState.coins += 100; updateCoinsDisplay(); }
 
     if (won) {
         elements.gameOverModal.className = 'game-over-modal victory';
+        AudioEngine.play('victory');
         elements.gameOverTitle.textContent   = 'VICTORY';
         elements.gameOverIcon.innerHTML = '<span class="crown-animate">🏆</span>';
         elements.gameOverMessage.textContent = 'Incredible! You won the battle and earned 100 coins!';
     } else if (isDraw) {
         elements.gameOverModal.className = 'game-over-modal';
+        AudioEngine.play('round-draw');
         elements.gameOverTitle.textContent   = '🤝 Draw!';
         elements.gameOverIcon.textContent    = '🤝';
         elements.gameOverMessage.textContent = "It's a draw! No coins earned this time.";
     } else {
         elements.gameOverModal.className = 'game-over-modal defeat';
+        AudioEngine.play('defeat');
         elements.gameOverTitle.textContent   = 'DEFEATED';
         elements.gameOverIcon.innerHTML = '<span class="shield-broken">🛡️</span>';
         elements.gameOverMessage.textContent = 'Better luck next time! Train harder and try again.';
@@ -1694,10 +1754,15 @@ function returnToCollection() {
 // ── Event listeners ───────────────────────────────────────────
 function setupEventListeners() {
     elements.buyPokemonBtn.addEventListener('click', buyPokemon);
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', () => AudioEngine.play('button-click'));
+    });
+
     elements.battleModeBtn.addEventListener('click', () => {
         showScreen('teamSelect');
         renderTeamSelection();
     });
+    
     elements.backToCollectionBtn.addEventListener('click', () => {
         showScreen('collection');
         renderCollection();
@@ -1717,6 +1782,7 @@ function initGame() {
         gameState.playerCollection.push(generateRandomPokemon());
     }
     setupEventListeners();
+    AudioEngine.init();
     showScreen('collection');
     renderCollection();
     updateCoinsDisplay();
