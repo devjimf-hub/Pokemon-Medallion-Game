@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <script src="lucide.min.js"></script>
 </head>
 <body>
     <canvas id="particles-canvas"></canvas>
@@ -19,11 +19,11 @@
             <div class="container">
                 <div class="header">
                     <div class="logo-area">
-                        <span class="logo-icon">⚡</span>
+                        <span class="logo-icon"><i data-lucide="zap"></i></span>
                         <h1>Pokemon Medallion</h1>
                     </div>
                     <div class="coins-display">
-                        <span class="coin-emoji">🪙</span>
+                        <span class="coin-emoji"><i data-lucide="coins"></i></span>
                         <span id="coins-amount">200</span>
                         <span class="coin-label">COINS</span>
                     </div>
@@ -31,10 +31,10 @@
 
                 <div class="button-group">
                     <button id="buy-pokemon-btn" class="btn btn-green">
-                        🛒 Buy Pokemon <span class="cost-tag">50🪙</span>
+                        <i data-lucide="shopping-cart"></i> Buy Pokemon <span class="cost-tag">50 <i data-lucide="coins"></i></span>
                     </button>
                     <button id="battle-mode-btn" class="btn btn-red">
-                        ⚔️ Battle Mode
+                        <i data-lucide="swords"></i> Battle Mode
                     </button>
                 </div>
 
@@ -59,17 +59,17 @@
 
                 <div class="button-group">
                     <button id="back-to-collection-btn" class="btn btn-gray">
-                        ← Back
+                        <i data-lucide="arrow-left"></i> Back
                     </button>
                     <button id="start-battle-btn" class="btn btn-red" disabled>
-                        ⚔️ Start Battle!
+                        <i data-lucide="swords"></i> Start Battle!
                     </button>
                 </div>
 
                 <div id="validation-errors" class="validation-errors hidden"></div>
 
                 <div id="selected-team" class="team-section hidden">
-                    <h2>✅ Selected Team</h2>
+                    <h2><i data-lucide="check-circle-2"></i> Selected Team</h2>
                     <div id="selected-team-grid" class="team-grid"></div>
                 </div>
 
@@ -96,7 +96,7 @@
 
                 <div class="battlefield">
                     <div class="opponent-section">
-                        <h3>⚠ OPPONENT'S TEAM</h3>
+                        <h3><i data-lucide="alert-triangle"></i> OPPONENT'S TEAM</h3>
                         <div id="opponent-team-grid" class="team-grid"></div>
                     </div>
 
@@ -109,7 +109,7 @@
                         <div id="battle-arena" class="battle-arena">
                             <div id="arena-content" class="arena-content">
                                 <div class="arena-text">
-                                    <div class="arena-title">⚡ BATTLE ARENA ⚡</div>
+                                    <div class="arena-title"><i data-lucide="swords"></i> BATTLE ARENA <i data-lucide="swords"></i></div>
                                     <div class="arena-subtitle">Select a Pokemon below</div>
                                 </div>
                             </div>
@@ -117,13 +117,13 @@
                     </div>
 
                     <div class="player-section">
-                        <h3>🛡 YOUR TEAM</h3>
+                        <h3><i data-lucide="shield"></i> YOUR TEAM</h3>
                         <div id="player-team-grid" class="team-grid"></div>
                     </div>
                 </div>
 
                 <div class="battle-controls">
-                    <button id="forfeit-btn" class="btn btn-gray">🏳 Forfeit Battle</button>
+                    <button id="forfeit-btn" class="btn btn-gray"><i data-lucide="flag"></i> Forfeit Battle</button>
                 </div>
             </div>
         </div>
@@ -132,12 +132,12 @@
         <div id="game-over-screen" class="screen hidden">
             <div class="container">
                 <div id="game-over-modal" class="game-over-modal">
-                    <div class="game-over-icon" id="game-over-icon">🏆</div>
-                    <h2 id="game-over-title">🏆 Victory!</h2>
+                    <div class="game-over-icon" id="game-over-icon"></div>
+                    <h2 id="game-over-title">Victory!</h2>
                     <p id="final-score">Final Score: 0 - 0</p>
                     <p id="game-over-message">Congratulations! You won the battle and earned 100 coins!</p>
                     <button id="return-to-collection-btn" class="btn btn-blue">
-                        🏠 Return to Collection
+                        <i data-lucide="home"></i> Return to Collection
                     </button>
                 </div>
             </div>
@@ -146,7 +146,7 @@
         <!-- Round Result Modal -->
         <div id="round-result-modal" class="modal hidden">
             <div class="modal-content">
-                <h2 id="round-result-title">🏆 You Win!</h2>
+                <h2 id="round-result-title">You Win!</h2>
                 <div id="round-result-pokemon" class="round-result-pokemon"></div>
                 <div id="status-log" class="status-log"></div>
                 <p id="round-result-text">Round 1 complete! Next round starting soon...</p>

@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(start index.html)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(curl -L \"https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js\" -o \"c:/Users/zimfv/OneDrive/Desktop/teachflow/Pokemon-Medallion-Game/lucide.min.js\")",
+      "Bash(Get-Item \"c:/Users/zimfv/OneDrive/Desktop/teachflow/Pokemon-Medallion-Game/lucide.min.js\")",
+      "Bash(Select-Object Name, Length)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js\" -OutFile \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\" -UseBasicParsing; \\(Get-Item \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\"\\).Length)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js\" -OutFile \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\" -UseBasicParsing; \\(Get-Item \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\"\\).Length)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js\" -OutFile \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\" -UseBasicParsing; \\(Get-Item \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\"\\).Length)",
+      "PowerShell(Invoke-WebRequest -Uri \"https://unpkg.com/lucide@latest/dist/umd/lucide.min.js\" -OutFile \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\" -UseBasicParsing; \\(Get-Item \"c:\\\\Users\\\\zimfv\\\\OneDrive\\\\Desktop\\\\teachflow\\\\Pokemon-Medallion-Game\\\\lucide.min.js\"\\).Length)"
     ]
   }
 }

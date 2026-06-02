@@ -1,57 +1,73 @@
-// Pokemon data and type advantages
 const pokemonData = {
     types: [
-        // Fire Family
-        { name: 'Charmander', type: 'Fire', color: 'fire', points: 60, tier: 'poke', family: 'Charmander', 
+        { name: 'Charmander', type: 'Fire', color: 'fire', points: 60, tier: 'poke', family: 'Charmander', pokedexId: 4,
           ability: { name: 'Ember', desc: '+12 CP vs Grass/Ice' } },
-        { name: 'Charizard', type: 'Fire', color: 'fire', points: 85, tier: 'great', family: 'Charmander', 
+        { name: 'Charizard', type: 'Fire', color: 'fire', points: 85, tier: 'great', family: 'Charmander', pokedexId: 6,
           ability: { name: 'Blaze', desc: '+25 CP if current CP is lower' } },
-        
-        // Water Family
-        { name: 'Squirtle', type: 'Water', color: 'water', points: 60, tier: 'poke', family: 'Squirtle', 
+
+        { name: 'Squirtle', type: 'Water', color: 'water', points: 60, tier: 'poke', family: 'Squirtle', pokedexId: 7,
           ability: { name: 'Bubble', desc: '+12 CP vs Fire/Rock' } },
-        { name: 'Blastoise', type: 'Water', color: 'water', points: 80, tier: 'great', family: 'Squirtle', 
+        { name: 'Blastoise', type: 'Water', color: 'water', points: 80, tier: 'great', family: 'Squirtle', pokedexId: 9,
           ability: { name: 'Torrent', desc: 'Reduces CPU CP by 15' } },
-        
-        // Grass Family
-        { name: 'Bulbasaur', type: 'Grass', color: 'grass', points: 60, tier: 'poke', family: 'Bulbasaur', 
+
+        { name: 'Bulbasaur', type: 'Grass', color: 'grass', points: 60, tier: 'poke', family: 'Bulbasaur', pokedexId: 1,
           ability: { name: 'Vine Whip', desc: '+12 CP vs Water/Rock' } },
-        { name: 'Venusaur', type: 'Grass', color: 'grass', points: 80, tier: 'great', family: 'Bulbasaur', 
+        { name: 'Venusaur', type: 'Grass', color: 'grass', points: 80, tier: 'great', family: 'Bulbasaur', pokedexId: 3,
           ability: { name: 'Overgrow', desc: 'Inflicts SEEDED next round' } },
-        
-        // Ghost Family
-        { name: 'Gastly', type: 'Ghost', color: 'ghost', points: 55, tier: 'poke', family: 'Gengar', 
+
+        { name: 'Gastly', type: 'Ghost', color: 'ghost', points: 55, tier: 'poke', family: 'Gengar', pokedexId: 92,
           ability: { name: 'Spook', desc: 'Steals 8 CP from opponent' } },
-        { name: 'Gengar', type: 'Ghost', color: 'ghost', points: 82, tier: 'great', family: 'Gengar', 
+        { name: 'Gengar', type: 'Ghost', color: 'ghost', points: 82, tier: 'great', family: 'Gengar', pokedexId: 94,
           ability: { name: 'Shadow Tag', desc: 'Silences opponent special ability' } },
 
-        // Legendaries (Ultra Ball)
-        { name: 'Dragonite', type: 'Dragon', color: 'dragon', points: 95, tier: 'ultra', family: 'Dragonite', 
+        { name: 'Dragonite', type: 'Dragon', color: 'dragon', points: 95, tier: 'ultra', family: 'Dragonite', pokedexId: 149,
           ability: { name: 'Multiscale', desc: '+30 CP if facing Legendary' } },
-        { name: 'Mewtwo', type: 'Psychic', color: 'psychic', points: 100, tier: 'ultra', family: 'Mewtwo', 
+        { name: 'Mewtwo', type: 'Psychic', color: 'psychic', points: 100, tier: 'ultra', family: 'Mewtwo', pokedexId: 150,
           ability: { name: 'Pressure', desc: 'Halves CPU base CP' } },
-        { name: 'Articuno', type: 'Ice', color: 'ice', points: 92, tier: 'ultra', family: 'Articuno', 
+        { name: 'Articuno', type: 'Ice', color: 'ice', points: 92, tier: 'ultra', family: 'Articuno', pokedexId: 144,
           ability: { name: 'Pressure-Ice', desc: 'Freezes CPU next round (-15 CP)' } },
-        { name: 'Zapdos', type: 'Electric', color: 'electric', points: 92, tier: 'ultra', family: 'Zapdos', 
+        { name: 'Zapdos', type: 'Electric', color: 'electric', points: 92, tier: 'ultra', family: 'Zapdos', pokedexId: 145,
           ability: { name: 'Pressure-Bolt', desc: '50% chance to PARALYZE CPU next round' } },
-        { name: 'Moltres', type: 'Fire', color: 'fire', points: 92, tier: 'ultra', family: 'Moltres', 
+        { name: 'Moltres', type: 'Fire', color: 'fire', points: 92, tier: 'ultra', family: 'Moltres', pokedexId: 146,
           ability: { name: 'Pressure-Flame', desc: 'Burns CPU next round (-12 CP)' } },
 
-        // Others
-        { name: 'Pikachu', type: 'Electric', color: 'electric', points: 72, tier: 'poke', family: 'Pikachu', 
+        { name: 'Pikachu', type: 'Electric', color: 'electric', points: 72, tier: 'poke', family: 'Pikachu', pokedexId: 25,
           ability: { name: 'Static', desc: '50% chance to PARALYZE (0 CP) on reveal' } },
-        { name: 'Geodude', type: 'Rock', color: 'rock', points: 65, tier: 'poke', family: 'Geodude', 
+        { name: 'Geodude', type: 'Rock', color: 'rock', points: 65, tier: 'poke', family: 'Geodude', pokedexId: 74,
           ability: { name: 'Sturdy', desc: 'Immune to CP reductions' } },
-        { name: 'Alakazam', type: 'Psychic', color: 'psychic', points: 88, tier: 'great', family: 'Alakazam', 
+        { name: 'Alakazam', type: 'Psychic', color: 'psychic', points: 88, tier: 'great', family: 'Alakazam', pokedexId: 65,
           ability: { name: 'Kinesis', desc: 'Swaps CP values with opponent' } },
-        { name: 'Machamp', type: 'Fighting', color: 'fighting', points: 85, tier: 'great', family: 'Machamp', 
+        { name: 'Machamp', type: 'Fighting', color: 'fighting', points: 85, tier: 'great', family: 'Machamp', pokedexId: 68,
           ability: { name: 'No Guard', desc: '+20 CP (Opponent gets +10)' } },
-        { name: 'Snorlax', type: 'Normal', color: 'normal', points: 78, tier: 'great', family: 'Snorlax', 
+        { name: 'Snorlax', type: 'Normal', color: 'normal', points: 78, tier: 'great', family: 'Snorlax', pokedexId: 143,
           ability: { name: 'Thick Fat', desc: '+20 CP vs Fire or Ice' } },
-        { name: 'Lapras', type: 'Water', color: 'water', points: 82, tier: 'great', family: 'Lapras', 
-          ability: { name: 'Water Absorb', desc: 'Reverses type disadvantage & +15 CP' } }
+        { name: 'Lapras', type: 'Water', color: 'water', points: 82, tier: 'great', family: 'Lapras', pokedexId: 131,
+          ability: { name: 'Water Absorb', desc: 'Reverses type disadvantage & +15 CP' } },
+
+        { name: 'Ninetales', type: 'Fire', color: 'fire', points: 76, tier: 'great', family: 'Vulpix', pokedexId: 38,
+          ability: { name: 'Drought', desc: 'Burns opponent for -10 CP next round' } },
+        { name: 'Vaporeon', type: 'Water', color: 'water', points: 78, tier: 'great', family: 'Eevee', pokedexId: 134,
+          ability: { name: 'Hydration', desc: 'Heals 10 CP from own status effects' } },
+        { name: 'Jolteon', type: 'Electric', color: 'electric', points: 75, tier: 'great', family: 'Eevee', pokedexId: 135,
+          ability: { name: 'Quick Feet', desc: '50% chance to gain +15 CP' } },
+        { name: 'Flareon', type: 'Fire', color: 'fire', points: 77, tier: 'great', family: 'Eevee', pokedexId: 136,
+          ability: { name: 'Flash Fire', desc: '+18 CP if opponent is Fire type' } },
+        { name: 'Gyarados', type: 'Water', color: 'water', points: 88, tier: 'great', family: 'Magikarp', pokedexId: 130,
+          ability: { name: 'Intimidate', desc: 'Reduces opponent CP by 12' } },
+        { name: 'Dragonair', type: 'Dragon', color: 'dragon', points: 72, tier: 'poke', family: 'Dratini', pokedexId: 148,
+          ability: { name: 'Shed Skin', desc: '50% chance to remove own status debuff' } },
+        { name: 'Aerodactyl', type: 'Rock', color: 'rock', points: 80, tier: 'great', family: 'Aerodactyl', pokedexId: 142,
+          ability: { name: 'Rock Head', desc: 'Ignores 10 CP of opponent advantage' } },
+        { name: 'Scyther', type: 'Fighting', color: 'fighting', points: 78, tier: 'great', family: 'Scyther', pokedexId: 123,
+          ability: { name: 'Swarm', desc: '+15 CP if opponent has higher CP' } },
+        { name: 'Poliwrath', type: 'Fighting', color: 'fighting', points: 75, tier: 'poke', family: 'Poliwag', pokedexId: 62,
+          ability: { name: 'Water Absorb', desc: 'Gains +12 CP vs Water types' } },
+        { name: 'Exeggutor', type: 'Grass', color: 'grass', points: 80, tier: 'great', family: 'Exeggcute', pokedexId: 103,
+          ability: { name: 'Harvest', desc: 'Regrows 8 CP after status effects' } },
+        { name: 'Rhydon', type: 'Rock', color: 'rock', points: 82, tier: 'ultra', family: 'Rhyhorn', pokedexId: 112,
+          ability: { name: 'Lightning Rod', desc: 'Immune to Electric advantage' } },
     ],
-    
+
     typeAdvantages: {
         Fire: ['Grass', 'Ice'],
         Water: ['Fire', 'Rock'],

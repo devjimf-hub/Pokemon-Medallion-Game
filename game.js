@@ -97,42 +97,141 @@ const AudioEngine = {
 };
 
 // ── Pokemon visual data ──────────────────────────────────────
-const POKEMON_PORTRAITS = {
-    Charmander: '🔥', Charizard: '🦎', Squirtle: '💧', Blastoise: '🐢',
-    Bulbasaur: '🌿', Venusaur: '🌱', Gastly: '🌫️', Gengar: '👻',
-    Pikachu: '🐭', Geodude: '🪨', Alakazam: '🔮',
-    Machamp: '💪', Dragonite: '🐲', Mewtwo: '👾', Snorlax: '😴',
-    Lapras: '🌊', Articuno: '🦅', Zapdos: '⚡', Moltres: '🔥'
-};
-
 const TYPE_EMOJIS = {
     Fire: '🔥', Water: '💧', Grass: '🌿', Electric: '⚡',
     Rock: '🪨', Psychic: '🔮', Fighting: '👊', Ghost: '👻',
     Dragon: '🐉', Normal: '⭐', Ice: '❄️'
 };
 
-const TIER_NAMES = { poke: 'Poke Ball', great: 'Great Ball', ultra: 'Ultra Ball' };
-
-// Sprite sheet: 6 columns × 3 rows, percentage-based positions
-// Row 0: Charmander Charizard Squirtle Blastoise Bulbasaur Venusaur
-// Row 1: Gastly Gengar Dragonite Mewtwo Articuno Zapdos
-// Row 2: Moltres Pikachu Geodude Alakazam Machamp Lapras
-const SPRITE_POSITIONS = {
-    Charmander: '0% 0%',   Charizard: '20% 0%',  Squirtle:  '40% 0%',
-    Blastoise:  '60% 0%',  Bulbasaur: '80% 0%',  Venusaur:  '100% 0%',
-    Gastly:     '0% 50%',  Gengar:    '20% 50%',  Dragonite: '40% 50%',
-    Mewtwo:     '60% 50%', Articuno:  '80% 50%',  Zapdos:    '100% 50%',
-    Moltres:    '0% 100%', Pikachu:   '20% 100%', Geodude:   '40% 100%',
-    Alakazam:   '60% 100%',Machamp:   '80% 100%', Lapras:    '100% 100%'
+const TYPE_ICONS = {
+    Fire: 'flame', Water: 'droplets', Grass: 'leaf', Electric: 'zap',
+    Rock: 'mountain', Psychic: 'brain', Fighting: 'swords', Ghost: 'ghost',
+    Dragon: 'diamond', Normal: 'circle', Ice: 'snowflake',
+    Poison: 'droplet', Ground: 'layers', Flying: 'cloud',
+    Bug: 'bug', Dark: 'moon', Steel: 'shield', Fairy: 'sparkles'
 };
 
-function portraitHTML(name) {
-    if (name === 'Snorlax') {
-        return `<div class="card-portrait sprite-portrait" style="background-image:url('sprite.png');background-size:500% 300%;background-position:100% 50%"></div>`;
+function typeIconHTML(type) {
+    const icon = TYPE_ICONS[type] || 'circle';
+    return `<i data-lucide="${icon}" class="type-icon"></i>`;
+}
+
+let _activeTooltip = null;
+
+function buildTypeTooltip(type) {
+    const adv    = pokemonData.typeAdvantages[type] || [];
+    const status = STATUS_EFFECTS[type];
+
+    const chipsHtml = adv.length
+        ? adv.map(t => `<span class="tt-chip">${typeIconHTML(t)} ${t}</span>`).join('')
+        : '<span class="tt-no-adv">No type advantage</span>';
+
+    const statusHtml = status
+        ? `<div class="tt-status">
+               <i data-lucide="${status.icon}" class="status-icon"></i>
+               Inflicts <strong>${status.name}</strong> — ${status.desc}
+           </div>`
+        : '';
+
+    const tip = document.createElement('div');
+    tip.className = 'type-tooltip-popup';
+    tip.innerHTML = `
+        <div class="tt-header">${typeIconHTML(type)} ${type}</div>
+        <div class="tt-section-label">Strong vs</div>
+        <div class="tt-chips">${chipsHtml}</div>
+        ${statusHtml}
+    `;
+    return tip;
+}
+
+function showTypeTooltip(badgeEl, type) {
+    if (_activeTooltip) { _activeTooltip.remove(); _activeTooltip = null; }
+    const tip = buildTypeTooltip(type);
+    tip.style.visibility = 'hidden';
+    document.body.appendChild(tip);
+    initializeLucideIcons(tip);
+
+    const rect  = badgeEl.getBoundingClientRect();
+    const tipW  = tip.offsetWidth;
+    const tipH  = tip.offsetHeight;
+    let left = rect.right - tipW;
+    let top  = rect.top  - tipH - 8;
+    if (left < 8) left = 8;
+    if (top  < 8) top  = rect.bottom + 8;
+    tip.style.left = `${left}px`;
+    tip.style.top  = `${top}px`;
+    tip.style.visibility = '';
+    _activeTooltip = tip;
+}
+
+function hideTypeTooltip() {
+    if (_activeTooltip) { _activeTooltip.remove(); _activeTooltip = null; }
+}
+
+const TIER_NAMES = { poke: 'Poke Ball', great: 'Great Ball', ultra: 'Ultra Ball' };
+
+const POKEMON_PORTRAITS = {
+    Charmander: '🔥', Charizard: '🦎', Squirtle: '💧', Blastoise: '🐢',
+    Bulbasaur: '🌿', Venusaur: '🌱', Gastly: '🌫️', Gengar: '👻',
+    Pikachu: '🐭', Geodude: '🪨', Alakazam: '🔮', Machamp: '💪',
+    Dragonite: '🐲', Mewtwo: '👾', Snorlax: '😴', Lapras: '🌊',
+    Articuno: '🦅', Zapdos: '⚡', Moltres: '🔥',
+    Ninetales: '🦊', Vaporeon: '💙', Jolteon: '💛', Flareon: '🧡',
+    Gyarados: '🐍', Dragonair: '🐉', Aerodactyl: '🦇', Scyther: '🦗',
+    Poliwrath: '🐸', Exeggutor: '🌴', Rhydon: '🦏'
+};
+
+const POKEAPI_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork';
+const spriteCache = {};
+
+function portraitHTML(nameOrPokemon) {
+    const name = typeof nameOrPokemon === 'string' ? nameOrPokemon : nameOrPokemon?.name;
+    const directId = typeof nameOrPokemon === 'object' ? nameOrPokemon?.pokedexId : null;
+    const lookup = pokemonData.types.find(p => p.name === name);
+    const id = directId || lookup?.pokedexId;
+    const emoji = POKEMON_PORTRAITS[name] || '⭐';
+
+    if (id) {
+        const src = spriteCache[id] || `${POKEAPI_BASE}/${id}.png`;
+        return `<span class="card-portrait portrait-wrapper"><img class="api-sprite" src="${src}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span class="portrait-fallback" style="display:none">${emoji}</span></span>`;
     }
-    const pos = SPRITE_POSITIONS[name];
-    if (!pos) return `<span class="card-portrait">${POKEMON_PORTRAITS[name] || '⭐'}</span>`;
-    return `<div class="card-portrait sprite-portrait" style="background-position:${pos}"></div>`;
+    return `<span class="card-portrait">${emoji}</span>`;
+}
+
+async function preloadSprites() {
+    const ids = [...new Set(pokemonData.types.map(p => p.pokedexId).filter(Boolean))];
+    const results = await Promise.allSettled(ids.map(id =>
+        new Promise(resolve => {
+            const img = new Image();
+            img.onload = () => { spriteCache[id] = `${POKEAPI_BASE}/${id}.png`; resolve(); };
+            img.onerror = resolve;
+            img.src = `${POKEAPI_BASE}/${id}.png`;
+        })
+    ));
+}
+
+async function loadRandomPokemonFromAPI() {
+    const total = 1010;
+    const id = Math.floor(Math.random() * total) + 1;
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+        const name = data.name.charAt(0).toUpperCase() + data.name.slice(1);
+        const typeName = data.types[0].type.name;
+        const type = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+        const color = type.toLowerCase();
+        const stats = data.stats.reduce((s, st) => s + st.base_stat, 0);
+        const points = Math.max(50, Math.min(100, Math.round(stats / 5.5)));
+        const tier = stats > 500 ? 'ultra' : stats > 380 ? 'great' : 'poke';
+        return {
+            name, type, color, points, tier, family: name,
+            ability: null, pokedexId: id, id: Date.now() + Math.random()
+        };
+    } catch { return null; }
 }
 
 const TRAINER_NAMES = [
@@ -144,16 +243,23 @@ const TRAINER_NAMES = [
 
 // ── Status effects (inflicted by type advantage on the loser) ─
 const STATUS_EFFECTS = {
-    Fire:     { type: 'burned',    name: 'BURNED',    emoji: '🔥', desc: '−12 pts',      pointMod: -12 },
-    Water:    { type: 'soaked',    name: 'SOAKED',    emoji: '💧', desc: '−8 pts',       pointMod: -8  },
-    Grass:    { type: 'seeded',    name: 'SEEDED',    emoji: '🌿', desc: '−10 pts',      pointMod: -10 },
-    Electric: { type: 'paralyzed', name: 'PARALYZED', emoji: '⚡', desc: '50% → 0 pts'                },
-    Psychic:  { type: 'confused',  name: 'CONFUSED',  emoji: '🔮', desc: 'pts ±20'                    },
-    Ghost:    { type: 'cursed',    name: 'CURSED',    emoji: '👻', desc: '−10 pts',      pointMod: -10 },
-    Fighting: { type: 'flinched',  name: 'FLINCHED',  emoji: '👊', desc: '−8 pts',       pointMod: -8  },
-    Ice:      { type: 'frozen',    name: 'FROZEN',    emoji: '❄️', desc: '−15 pts',      pointMod: -15 },
-    Rock:     { type: 'stunned',   name: 'STUNNED',   emoji: '🪨', desc: '−6 pts',       pointMod: -6  },
-    Dragon:   { type: 'crushed',   name: 'CRUSHED',   emoji: '🐉', desc: '−12 pts',      pointMod: -12 },
+    Fire:     { type: 'burned',    name: 'BURNED',    emoji: '🔥', icon: 'flame',        desc: '−12 pts',   pointMod: -12 },
+    Water:    { type: 'soaked',    name: 'SOAKED',    emoji: '💧', icon: 'droplets',     desc: '−8 pts',    pointMod: -8  },
+    Grass:    { type: 'seeded',    name: 'SEEDED',    emoji: '🌿', icon: 'leaf',         desc: '−10 pts',   pointMod: -10 },
+    Electric: { type: 'paralyzed', name: 'PARALYZED', emoji: '⚡', icon: 'zap',          desc: '50% → 0 pts'             },
+    Psychic:  { type: 'confused',  name: 'CONFUSED',  emoji: '🔮', icon: 'brain',        desc: 'pts ±20'                 },
+    Ghost:    { type: 'cursed',    name: 'CURSED',    emoji: '👻', icon: 'skull',        desc: '−10 pts',   pointMod: -10 },
+    Fighting: { type: 'flinched',  name: 'FLINCHED',  emoji: '👊', icon: 'shield-off',   desc: '−8 pts',    pointMod: -8  },
+    Ice:      { type: 'frozen',    name: 'FROZEN',    emoji: '❄️', icon: 'snowflake',    desc: '−15 pts',   pointMod: -15 },
+    Rock:     { type: 'stunned',    name: 'STUNNED',    emoji: '🪨', icon: 'x-circle',      desc: '−6 pts',         pointMod: -6  },
+    Dragon:   { type: 'crushed',   name: 'CRUSHED',    emoji: '🐉', icon: 'trending-down', desc: '−12 pts',        pointMod: -12 },
+    Poison:   { type: 'poisoned',  name: 'POISONED',   emoji: '☠️', icon: 'biohazard',    desc: '−8, then −4',    pointMod: -8  },
+    Ground:   { type: 'grounded',  name: 'GROUNDED',   emoji: '⛰️', icon: 'anchor',       desc: '−9 pts',         pointMod: -9  },
+    Flying:   { type: 'swept',     name: 'SWEPT',      emoji: '🌬️', icon: 'feather',      desc: '50% chance −14', },
+    Bug:      { type: 'swarmed',   name: 'SWARMED',    emoji: '🐛', icon: 'bug',          desc: '−7 pts',         pointMod: -7  },
+    Dark:     { type: 'intimidated',name:'INTIMIDATED', emoji: '😰', icon: 'eye-off',      desc: '−11 pts',        pointMod: -11 },
+    Steel:    { type: 'impaled',   name: 'IMPALED',    emoji: '⚙️', icon: 'sword',        desc: '−13 pts',        pointMod: -13 },
+    Fairy:    { type: 'charmed',   name: 'CHARMED',    emoji: '💖', icon: 'heart',        desc: 'steals 10 pts'   },
     Normal:   null
 };
 
@@ -168,7 +274,14 @@ const TYPE_EFFECT_COLORS = {
     Ghost:    'rgba(124,77,255,0.6)',
     Dragon:   'rgba(249,115,22,0.55)',
     Normal:   'rgba(120,144,156,0.45)',
-    Ice:      'rgba(0,188,212,0.55)'
+    Ice:      'rgba(0,188,212,0.55)',
+    Poison:   'rgba(156,39,176,0.6)',
+    Ground:   'rgba(204,136,0,0.55)',
+    Flying:   'rgba(79,195,247,0.55)',
+    Bug:      'rgba(139,195,74,0.55)',
+    Dark:     'rgba(78,52,46,0.6)',
+    Steel:    'rgba(96,125,139,0.55)',
+    Fairy:    'rgba(240,98,146,0.6)'
 };
 
 // ── Game state ────────────────────────────────────────────────
@@ -440,6 +553,7 @@ function spawnBattleParticles(playerType, opponentType) {
 }
 
 function launchConfetti() {
+    AudioEngine.play('confetti');
     const screen = document.getElementById('game-over-screen');
     if (!screen) return;
     const colors = ['#ff0080','#ff8c00','#ffd700','#00ff87','#00f5ff','#bf5af2','#ff4444','#44aaff'];
@@ -484,7 +598,17 @@ function animateCoinDisplay(from, to) {
 }
 
 // ── Utilities ─────────────────────────────────────────────────
-function generateRandomPokemon() {
+async function generateRandomPokemon() {
+    const apiPokemon = await loadRandomPokemonFromAPI();
+    if (apiPokemon) {
+        const id = apiPokemon.pokedexId;
+        if (id && !spriteCache[id]) {
+            const img = new Image();
+            img.onload = () => { spriteCache[id] = `${POKEAPI_BASE}/${id}.png`; };
+            img.src = `${POKEAPI_BASE}/${id}.png`;
+        }
+        return { ...apiPokemon, id: Date.now() + Math.random() };
+    }
     const base = pokemonData.types[Math.floor(Math.random() * pokemonData.types.length)];
     const variation = Math.floor(Math.random() * 21) - 10;
     return { ...base, id: Date.now() + Math.random(), points: Math.max(50, base.points + variation) };
@@ -494,11 +618,7 @@ function getRarityClass(rarity) { return rarity.toLowerCase(); }
 
 function initializeLucideIcons(container) {
     if (typeof lucide === 'undefined') return;
-    if (container) {
-        lucide.createIcons({ nodes: Array.from(container.querySelectorAll('[data-lucide]')) });
-    } else {
-        lucide.createIcons();
-    }
+    lucide.createIcons();
 }
 
 // ── Card creation ─────────────────────────────────────────────
@@ -508,32 +628,13 @@ function createPokemonCard(pokemon, context = 'collection') {
     card.className = `pokemon-card ${pokemon.color} ${tierClass}`;
     card.dataset.pokemonId = pokemon.id;
 
-    const typeEmoji = TYPE_EMOJIS[pokemon.type] || '';
+    const crownHtml = tierClass === 'ultra' ? '<i data-lucide="crown" class="crown-icon"></i>' : '';
 
-    // Map tier to friendly Poke Ball names
-    const tierName = TIER_NAMES[tierClass] || 'Poke Ball';
-
-    // Crown icon for legendary cards
-    const crownHtml = tierClass === 'ultra' ? '<div class="crown-icon">👑</div>' : '';
-
-    // Ability description display
-    const abilityHtml = pokemon.ability
-        ? `<div class="ability-desc" style="font-size:0.55rem; opacity:0.85; line-height:1.25; padding-top:0.25rem; color:#60a5fa; border-top: 1px dashed rgba(255,255,255,0.1); margin-top:0.2rem;">✨ ${pokemon.ability.name}: ${pokemon.ability.desc}</div>`
-        : '';
-
-    let content = `
-        ${crownHtml}
-        ${portraitHTML(pokemon.name)}
-        <h3>${pokemon.name}</h3>
-        <div class="type-rarity">${typeEmoji} ${pokemon.type} · ${tierName}</div>
-        <div class="points"><i data-lucide="trophy"></i><span>${pokemon.points} CP</span></div>
-        ${abilityHtml}
-    `;
-
+    let overlayHtml = '';
     if (context === 'teamSelect') {
         const isSelected = gameState.playerTeam.find(p => p.id === pokemon.id);
         if (isSelected) {
-            content += '<div class="selected-badge">✓ DECKED</div>';
+            overlayHtml = '<div class="card-overlay overlay-decked"><i data-lucide="check-circle-2"></i></div>';
             card.classList.add('disabled');
         }
     } else if (context === 'battle') {
@@ -541,18 +642,30 @@ function createPokemonCard(pokemon, context = 'collection') {
         const isSelected = gameState.selectedPokemon?.id === pokemon.id;
         if (isUsed) {
             card.classList.add('used');
-            content += '<div class="status">USED</div><div class="used-overlay">✕</div>';
+            overlayHtml = '<div class="card-overlay overlay-used">✕</div>';
         } else if (gameState.battleAnimation === 'waiting') {
             card.classList.toggle('selected', !!isSelected);
-            content += `<div class="status">${isSelected ? '⚔ SELECTED — tap arena!' : 'Tap to select'}</div>`;
         } else {
             card.classList.add('disabled');
         }
-    } else if (context === 'teamDisplay') {
-        content += '<div class="status">Tap to remove</div>';
     }
 
-    card.innerHTML = content;
+    card.innerHTML = `
+        ${crownHtml}
+        <div class="card-header"><h3>${pokemon.name}</h3></div>
+        <div class="card-portrait-ring">${portraitHTML(pokemon)}</div>
+        <div class="card-footer">
+            <div class="card-cp"><i data-lucide="zap"></i><span>${pokemon.points}</span></div>
+            <div class="card-type-badge" data-type="${pokemon.type}">${typeIconHTML(pokemon.type)}</div>
+        </div>
+        ${overlayHtml}
+    `;
+
+    const badge = card.querySelector('.card-type-badge');
+    if (badge) {
+        badge.addEventListener('mouseenter', () => showTypeTooltip(badge, pokemon.type));
+        badge.addEventListener('mouseleave', hideTypeTooltip);
+    }
 
     if (context === 'teamSelect')  card.addEventListener('click', () => selectForTeam(pokemon));
     if (context === 'battle')      card.addEventListener('click', () => selectPokemon(pokemon));
@@ -574,83 +687,78 @@ function createCardBack(tier = 'poke') {
 function createBattlePokemonCard(pokemon, isWinner = false, side = 'player', forceFaceDown = false) {
     const isFaceDown = forceFaceDown || ((side === 'player' ? gameState.playerFaceDown : gameState.opponentFaceDown) && gameState.battleAnimation !== 'result');
     const card = document.createElement('div');
-    card.className = `battle-pokemon ${side}-side ${pokemon.color} ${isFaceDown ? 'face-down' : ''}`;
+    const tierClass = pokemon.tier || 'poke';
+    card.className = `battle-pokemon ${side}-side ${pokemon.color} ${tierClass} ${isFaceDown ? 'face-down' : ''}`;
 
     if (isFaceDown) {
         card.appendChild(createCardBack(pokemon.tier));
         return card;
     }
 
-    let content = `
-        ${portraitHTML(pokemon.name)}
-        <h3>${pokemon.name}</h3>
-        <div class="type">${pokemon.type}</div>
-    `;
+    const crownHtml  = tierClass === 'ultra' ? '<i data-lucide="crown" class="crown-icon"></i>' : '';
+
+    // ── CP / points section ──────────────────────────────────────
+    let cpContent = `<span>${pokemon.points}</span>`;
+    let formulaHtml = '';
+    let advBadge = '';
 
     if (gameState.showPoints) {
         const info = gameState.lastBattleInfo;
         if (info) {
-            const hasAdv = side === 'player' ? info.playerAdv : info.opponentAdv;
-            const hasDisadv = side === 'player' ? info.opponentAdv : info.playerAdv;
+            const hasAdv   = side === 'player' ? info.playerAdv   : info.opponentAdv;
+            const hasDisadv= side === 'player' ? info.opponentAdv : info.playerAdv;
             const finalPts = side === 'player' ? info.playerFinal : info.opponentFinal;
+            const status   = side === 'player' ? info.prevPlayerStatus : info.prevOpponentStatus;
 
-            // Points Breakdown
             let formula = `${pokemon.points}`;
-            if (hasAdv) formula += ` + 15`;
-            
-            const status = side === 'player' ? info.prevPlayerStatus : info.prevOpponentStatus;
+            if (hasAdv) formula += '+15';
             if (status) {
-                if (status.type === 'paralyzed' && finalPts === 0) {
-                    formula = `(PARALYZED) 0`;
-                } else if (status.pointMod) {
-                    formula += ` ${status.pointMod >= 0 ? '+' : ''}${status.pointMod}`;
-                }
+                if (status.type === 'paralyzed' && finalPts === 0) formula = 'PARALYZED→0';
+                else if (status.pointMod) formula += `${status.pointMod >= 0 ? '+' : ''}${status.pointMod}`;
             }
 
-            // Add advantage/disadvantage badges (only after points are calculated)
-            if (hasAdv) {
-                card.classList.add('has-advantage');
-                content += `<div class="advantage-badge">🔥 ADVANTAGE</div>`;
-            } else if (hasDisadv) {
-                content += `<div class="disadvantage-badge">⚠️ WEAKNESS</div>`;
-            }
+            if (hasAdv)   { card.classList.add('has-advantage'); advBadge = `<div class="battle-adv-badge adv"><i data-lucide="flame"></i></div>`; }
+            else if (hasDisadv) advBadge = `<div class="battle-adv-badge disadv"><i data-lucide="alert-triangle"></i></div>`;
 
-            if (gameState.battleAnimation === 'battle') {
-                content += `
-                    <div class="points points-breakdown-main">
-                        <span class="animated-points-val" data-start="${pokemon.points}" data-target="${finalPts}">${pokemon.points} pts</span>
-                    </div>
-                    <div class="points-breakdown">(${formula})</div>
-                `;
-            } else {
-                content += `
-                    <div class="points points-breakdown-main">${finalPts} pts</div>
-                    <div class="points-breakdown">(${formula})</div>
-                `;
-            }
-        } else {
-            content += `<div class="points">${pokemon.points} pts</div>`;
+            cpContent = gameState.battleAnimation === 'battle'
+                ? `<span class="animated-points-val" data-start="${pokemon.points}" data-target="${finalPts}">${pokemon.points}</span>`
+                : `<span>${finalPts}</span>`;
+            formulaHtml = `<div class="battle-formula">(${formula})</div>`;
         }
     }
 
-    // Status badge: show the current active status for this side
+    card.innerHTML = `
+        ${crownHtml}
+        ${advBadge}
+        <div class="card-header"><h3>${pokemon.name}</h3></div>
+        <div class="card-portrait-ring">${portraitHTML(pokemon)}</div>
+        <div class="card-footer">
+            <div class="card-cp"><i data-lucide="zap"></i>${cpContent}</div>
+            <div class="card-type-badge">${typeIconHTML(pokemon.type)}</div>
+        </div>
+        ${formulaHtml}
+    `;
+
+    // Status badge
     const activeStatus = side === 'player' ? gameState.playerStatus : gameState.opponentStatus;
     if (activeStatus) {
         const isResult = gameState.battleAnimation === 'result';
-        const label    = isResult
-            ? `${activeStatus.emoji} ${activeStatus.name} next round`
-            : `${activeStatus.emoji} ${activeStatus.name}`;
-        content += `<div class="status-badge status-${activeStatus.type}">${label}</div>`;
+        const iconHtml = activeStatus.icon ? `<i data-lucide="${activeStatus.icon}" class="status-icon"></i>` : '';
+        const sb = document.createElement('div');
+        sb.className = `status-badge status-${activeStatus.type}`;
+        sb.innerHTML = `${iconHtml} ${activeStatus.name}${isResult ? ' next round' : ''}`;
+        card.appendChild(sb);
     }
 
-    card.innerHTML = content;
-
-    if (gameState.battleAnimation === 'result' && gameState.roundWinner !== 'tie' && ((side === 'player' && gameState.roundWinner === 'opponent') || (side === 'opponent' && gameState.roundWinner === 'player'))) {
+    // Defeat overlay
+    if (gameState.battleAnimation === 'result' && gameState.roundWinner !== 'tie' &&
+        ((side === 'player' && gameState.roundWinner === 'opponent') || (side === 'opponent' && gameState.roundWinner === 'player'))) {
         const x = document.createElement('div');
         x.className = 'defeat-overlay';
         x.textContent = '✕';
         card.appendChild(x);
     }
+
     return card;
 }
 
@@ -689,9 +797,8 @@ function showPokemonRevealModal(pokemon) {
     return new Promise(resolve => {
         const tierClass = pokemon.tier || 'poke';
         const ballClass = tierClass === 'ultra' ? 'ultraball' : tierClass === 'great' ? 'greatball' : 'pokeball';
-        const typeEmoji = TYPE_EMOJIS[pokemon.type] || '';
         const tierName  = TIER_NAMES[tierClass] || 'Poke Ball';
-        const crownHtml = tierClass === 'ultra' ? '<div class="crown-icon">👑</div>' : '';
+        const crownHtml = tierClass === 'ultra' ? '<i data-lucide="crown" class="crown-icon"></i>' : '';
 
         const modal = document.createElement('div');
         modal.className = 'reveal-modal';
@@ -708,22 +815,25 @@ function showPokemonRevealModal(pokemon) {
                             </div>
                             <div class="reveal-card-face reveal-card-back-face ${pokemon.color} ${tierClass}">
                                 ${crownHtml}
-                                ${portraitHTML(pokemon.name)}
-                                <h3>${pokemon.name}</h3>
-                                <div class="type-rarity">${typeEmoji} ${pokemon.type} · ${tierName}</div>
-                                <div class="points">⚡ ${pokemon.points} CP</div>
+                                <div class="card-header"><h3>${pokemon.name}</h3></div>
+                                <div class="card-portrait-ring">${portraitHTML(pokemon)}</div>
+                                <div class="card-footer">
+                                    <div class="card-cp"><i data-lucide="zap"></i><span>${pokemon.points}</span></div>
+                                    <div class="card-type-badge">${typeIconHTML(pokemon.type)}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="reveal-congrats hidden">
-                    <div class="reveal-congrats-text">🎉 Congratulations!</div>
+                    <div class="reveal-congrats-text"><i data-lucide="party-popper"></i> Congratulations!</div>
                     <div class="reveal-congrats-name">You got <strong>${pokemon.name}</strong>!</div>
                 </div>
-                <button class="btn btn-blue reveal-ok-btn hidden">✨ Add to Collection</button>
+                <button class="btn btn-blue reveal-ok-btn hidden"><i data-lucide="sparkles"></i> Add to Collection</button>
             </div>
         `;
         document.body.appendChild(modal);
+        initializeLucideIcons(modal);
 
         // Stop float then flip card
         setTimeout(() => modal.querySelector('.reveal-float-wrap').classList.add('stop-float'), 1600);
@@ -749,7 +859,7 @@ async function buyPokemon() {
     AudioEngine.play('buy');
     updateCoinsDisplay();
 
-    const newPokemon = generateRandomPokemon();
+    const newPokemon = await generateRandomPokemon();
     await showPokemonRevealModal(newPokemon);
 
     gameState.playerCollection.push(newPokemon);
@@ -867,17 +977,18 @@ function showFindingOpponentModal(trainerName) {
         modal.className = 'finding-opponent-modal';
         modal.innerHTML = `
             <div class="finding-modal-content">
-                <div class="finding-icon">🔍</div>
+                <i data-lucide="search" class="finding-icon"></i>
                 <h2 class="finding-title">Finding a strong opponent...</h2>
                 <div class="finding-dots"><span></span><span></span><span></span></div>
                 <div class="found-reveal hidden">
-                    <div class="found-vs">⚔️ VS</div>
+                    <div class="found-vs"><i data-lucide="swords"></i> VS</div>
                     <div class="found-name">Trainer ${trainerName}</div>
                     <div class="found-sub">Get ready to battle!</div>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
+        initializeLucideIcons(modal);
 
         setTimeout(() => {
             AudioEngine.play('find-opponent');
@@ -1000,6 +1111,8 @@ function renderBattle() {
         elements.playerTeamGrid.appendChild(createPokemonCard(p, 'battle'));
     });
     initializeLucideIcons(elements.playerTeamGrid);
+    initializeLucideIcons(elements.opponentTeamGrid);
+    initializeLucideIcons(elements.arenaContent);
     updateStatusIndicators();
 }
 
@@ -1010,8 +1123,10 @@ function updateStatusIndicators() {
 
     function setIndicator(el, status, label) {
         if (status) {
+            const iconHtml = status.icon ? `<i data-lucide="${status.icon}" class="status-icon"></i>` : '';
             el.className = `status-indicator active status-${status.type}`;
-            el.innerHTML = `${label} ${status.emoji} <strong>${status.name}</strong> <span class="status-desc">${status.desc}</span>`;
+            el.innerHTML = `${label} ${iconHtml} <strong>${status.name}</strong> <span class="status-desc">${status.desc}</span>`;
+            initializeLucideIcons(el);
         } else {
             el.className = 'status-indicator';
             el.textContent = '';
@@ -1023,19 +1138,22 @@ function updateStatusIndicators() {
 
 function updateBattleStatus() {
     if (gameState.activeTurn === 'opponent') {
-        elements.battleStatus.textContent = `🤖 ${gameState.opponentName}'s Turn — thinking...`;
+        elements.battleStatus.innerHTML = `<i data-lucide="bot"></i> ${gameState.opponentName}'s Turn — thinking...`;
+        initializeLucideIcons(elements.battleStatus);
         return;
     }
 
+    const name = gameState.selectedPokemon?.name || '';
     const msgs = {
-        waiting:   gameState.selectedPokemon
-                     ? `YOUR TURN! ⚡ Tap the arena to throw ${gameState.selectedPokemon.name}!`
-                     : 'YOUR TURN! 👇 Select a Pokemon below!',
-        revealing: '🔥 Pokemon facing off...',
-        battle:    '💥 Battle in progress!',
-        result:    '🏁 Round complete!'
+        waiting:   name
+                     ? `YOUR TURN! <i data-lucide="zap"></i> Tap the arena to throw ${name}!`
+                     : `YOUR TURN! <i data-lucide="hand"></i> Select a Pokemon below!`,
+        revealing: `<i data-lucide="swords"></i> Pokemon facing off...`,
+        battle:    `<i data-lucide="activity"></i> Battle in progress!`,
+        result:    `<i data-lucide="flag"></i> Round complete!`
     };
-    elements.battleStatus.textContent = msgs[gameState.battleAnimation] || '';
+    elements.battleStatus.innerHTML = msgs[gameState.battleAnimation] || '';
+    initializeLucideIcons(elements.battleStatus);
 }
 
 function renderBattleArena() {
@@ -1051,9 +1169,9 @@ function renderBattleArena() {
         if (!gameState.playerThrown && !gameState.opponentThrown) {
             content.innerHTML = `
                 <div class="arena-text">
-                    <div class="arena-title">⚡ BATTLE ARENA ⚡</div>
+                    <div class="arena-title"><i data-lucide="swords"></i> BATTLE ARENA <i data-lucide="swords"></i></div>
                     <div class="arena-subtitle">${gameState.selectedPokemon ? `Tap to throw ${gameState.selectedPokemon.name}!` : 'Select a Pokemon below'}</div>
-                    ${gameState.selectedPokemon ? `<div class="arena-ready">🎯 READY</div>` : ''}
+                    ${gameState.selectedPokemon ? `<div class="arena-ready"><i data-lucide="target"></i> READY</div>` : ''}
                 </div>`;
             content.className = 'arena-content';
             return;
@@ -1066,14 +1184,14 @@ function renderBattleArena() {
 
         let spriteHTML, titleText;
         if (winner === 'player' && gameState.playerThrown) {
-            spriteHTML = `<div class="slam-sprite">${portraitHTML(gameState.playerThrown.name)}</div>`;
+            spriteHTML = `<div class="slam-sprite">${portraitHTML(gameState.playerThrown)}</div>`;
             titleText  = 'YOU WIN!';
         } else if (winner === 'opponent' && gameState.opponentThrown) {
-            spriteHTML = `<div class="slam-sprite">${portraitHTML(gameState.opponentThrown.name)}</div>`;
+            spriteHTML = `<div class="slam-sprite">${portraitHTML(gameState.opponentThrown)}</div>`;
             titleText  = `${gameState.opponentName} WINS!`;
         } else {
-            const ps = gameState.playerThrown   ? portraitHTML(gameState.playerThrown.name)   : '';
-            const os = gameState.opponentThrown ? portraitHTML(gameState.opponentThrown.name) : '';
+            const ps = gameState.playerThrown   ? portraitHTML(gameState.playerThrown)   : '';
+            const os = gameState.opponentThrown ? portraitHTML(gameState.opponentThrown) : '';
             spriteHTML = `<div class="slam-sprite slam-sprite-tie">${ps}<span class="slam-vs-tie">VS</span>${os}</div>`;
             titleText  = 'DRAW!';
         }
@@ -1453,6 +1571,23 @@ function applyStatusEffect(basePoints, status) {
                 msg: `🔮 CONFUSED! Points ${shift >= 0 ? '+' : ''}${shift} (${basePoints} → ${final})`
             };
         }
+        case 'swept': {
+            const hit = Math.random() < 0.5;
+            const final = hit ? Math.max(1, basePoints - 14) : basePoints;
+            return {
+                finalPoints: final,
+                msg: hit ? `🌬️ SWEPT! −14 pts (${basePoints} → ${final})` : `🌬️ Swept away — landed safely, no effect!`
+            };
+        }
+        case 'charmed': {
+            const stolen = Math.min(10, Math.floor(basePoints * 0.15));
+            const final  = Math.max(1, basePoints - stolen);
+            return {
+                finalPoints: final,
+                stolen,
+                msg: `💖 CHARMED! Stole ${stolen} pts (${basePoints} → ${final})`
+            };
+        }
         default: {
             const mod   = status.pointMod || 0;
             const final = Math.max(1, basePoints + mod);
@@ -1809,19 +1944,22 @@ function endGame() {
         elements.gameOverModal.className = 'game-over-modal victory';
         AudioEngine.play('victory');
         elements.gameOverTitle.textContent   = 'VICTORY';
-        elements.gameOverIcon.innerHTML = '<span class="crown-animate">🏆</span>';
+        elements.gameOverIcon.innerHTML = '<i data-lucide="trophy" class="crown-animate"></i>';
+        initializeLucideIcons(elements.gameOverIcon);
         elements.gameOverMessage.textContent = 'Incredible! You won the battle and earned 100 coins!';
     } else if (isDraw) {
         elements.gameOverModal.className = 'game-over-modal';
         AudioEngine.play('round-draw');
-        elements.gameOverTitle.textContent   = '🤝 Draw!';
-        elements.gameOverIcon.textContent    = '🤝';
+        elements.gameOverTitle.textContent   = 'Draw!';
+        elements.gameOverIcon.innerHTML      = '<i data-lucide="handshake"></i>';
+        initializeLucideIcons(elements.gameOverIcon);
         elements.gameOverMessage.textContent = "It's a draw! No coins earned this time.";
     } else {
         elements.gameOverModal.className = 'game-over-modal defeat';
         AudioEngine.play('defeat');
         elements.gameOverTitle.textContent   = 'DEFEATED';
-        elements.gameOverIcon.innerHTML = '<span class="shield-broken">🛡️</span>';
+        elements.gameOverIcon.innerHTML = '<i data-lucide="shield-off" class="shield-broken"></i>';
+        initializeLucideIcons(elements.gameOverIcon);
         elements.gameOverMessage.textContent = 'Better luck next time! Train harder and try again.';
     }
 
@@ -1866,15 +2004,19 @@ function initGame() {
     gameState.playerRating = 1400 + Math.floor(Math.random() * 300);
     gameState.opponentRating = 1400 + Math.floor(Math.random() * 300);
     
-    for (let i = 0; i < 12; i++) {
-        gameState.playerCollection.push(generateRandomPokemon());
-    }
+    const pool = [...pokemonData.types].sort(() => Math.random() - 0.5).slice(0, 6);
+    pool.forEach(base => {
+        const variation = Math.floor(Math.random() * 21) - 10;
+        gameState.playerCollection.push({ ...base, id: Date.now() + Math.random(), points: Math.max(50, base.points + variation) });
+    });
     setupEventListeners();
     AudioEngine.init();
+    preloadSprites();
     showScreen('collection');
     renderCollection();
     updateCoinsDisplay();
     initParticleSystem();
+    initializeLucideIcons();
 }
 
 document.addEventListener('DOMContentLoaded', initGame);
