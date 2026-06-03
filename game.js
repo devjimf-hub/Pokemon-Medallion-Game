@@ -117,6 +117,7 @@ function typeIconHTML(type) {
 }
 
 let _activeTooltip = null;
+let _tooltipTimer  = null;
 
 function buildTypeTooltip(type) {
     const adv    = pokemonData.typeAdvantages[type] || [];
@@ -145,7 +146,7 @@ function buildTypeTooltip(type) {
 }
 
 function showTypeTooltip(badgeEl, type) {
-    if (_activeTooltip) { _activeTooltip.remove(); _activeTooltip = null; }
+    hideTypeTooltip();
     const tip = buildTypeTooltip(type);
     tip.style.visibility = 'hidden';
     document.body.appendChild(tip);
@@ -162,9 +163,13 @@ function showTypeTooltip(badgeEl, type) {
     tip.style.top  = `${top}px`;
     tip.style.visibility = '';
     _activeTooltip = tip;
+
+    _tooltipTimer = setTimeout(hideTypeTooltip, 1500);
 }
 
 function hideTypeTooltip() {
+    clearTimeout(_tooltipTimer);
+    _tooltipTimer = null;
     if (_activeTooltip) { _activeTooltip.remove(); _activeTooltip = null; }
 }
 
@@ -304,7 +309,7 @@ let gameState = {
     activeTurn: 'player', // 'player' | 'opponent' | 'clash'
     battleAnimation: 'waiting',
     whoThrewFirst: null,
-    showPoints: false,
+    showPoints: false, showPlayerPoints: false, showOpponentPoints: false,
     throwingAnimation: false,
     showRoundResult: false,
     playerStatus: null,
@@ -341,7 +346,6 @@ const elements = {
     currentRound:         document.getElementById('current-round'),
     playerScore:          document.getElementById('player-score'),
     opponentScore:        document.getElementById('opponent-score'),
-    battleStatus:         document.getElementById('battle-status'),
     battleArena:          document.getElementById('battle-arena'),
     arenaContent:         document.getElementById('arena-content'),
     opponentTeamGrid:     document.getElementById('opponent-team-grid'),
@@ -477,21 +481,28 @@ function triggerFloatingBattleTexts() {
 }
 
 function createFloatingText(targetEl, text, className) {
-    const rect = targetEl.getBoundingClientRect();
+    const rect      = targetEl.getBoundingClientRect();
     const arenaRect = elements.battleArena.getBoundingClientRect();
-    
+
+    const iconMap = {
+        'advantage':    'trending-up',
+        'weakness':     'trending-down',
+        'status-minus': 'alert-circle'
+    };
+    const icon = iconMap[className] || 'zap';
+
     const el = document.createElement('div');
     el.className = `floating-battle-text float-${className}`;
-    el.textContent = text;
-    
+    el.innerHTML = `<i data-lucide="${icon}" class="float-icon"></i><span>${text}</span>`;
+
     const x = (rect.left + rect.width / 2) - arenaRect.left;
-    const y = rect.top - arenaRect.top + 15;
-    
+    const y = rect.top - arenaRect.top + 20;
     el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    
+    el.style.top  = `${y}px`;
+
     elements.battleArena.appendChild(el);
-    setTimeout(() => el.remove(), 1800);
+    initializeLucideIcons(el);
+    setTimeout(() => el.remove(), 3000);
 }
 
 function animateBattleCardPoints() {
@@ -504,7 +515,7 @@ function animateBattleCardPoints() {
             return;
         }
 
-        const duration = 1400; // 1.4s smooth counting animation
+        const duration = 2800; // slow, readable counting animation
         const startTime = performance.now();
 
         function update(now) {
@@ -675,12 +686,11 @@ function createPokemonCard(pokemon, context = 'collection') {
 }
 
 function createCardBack(tier = 'poke') {
+    const ballClass = tier === 'ultra' ? 'ultraball' : tier === 'great' ? 'greatball' : 'pokeball';
+    const ballLabel = tier === 'ultra' ? 'Ultra' : tier === 'great' ? 'Great' : 'Poke';
     const back = document.createElement('div');
-    back.className = `card-back ${tier}`;
-    back.innerHTML = `
-        <div class="ball-center"></div>
-        <div class="ball-label">${tier === 'ultra' ? 'Ultra' : tier === 'great' ? 'Great' : 'Poke'}</div>
-    `;
+    back.className = `card-back ${ballClass}`;
+    back.innerHTML = `<div class="ball-center"></div><div class="ball-label">${ballLabel}</div>`;
     return back;
 }
 
@@ -702,7 +712,8 @@ function createBattlePokemonCard(pokemon, isWinner = false, side = 'player', for
     let formulaHtml = '';
     let advBadge = '';
 
-    if (gameState.showPoints) {
+    const shouldShowPoints = side === 'player' ? gameState.showPlayerPoints : gameState.showOpponentPoints;
+    if (shouldShowPoints) {
         const info = gameState.lastBattleInfo;
         if (info) {
             const hasAdv   = side === 'player' ? info.playerAdv   : info.opponentAdv;
@@ -928,20 +939,38 @@ function validateDeck(proposedTeam) {
 }
 
 function syncValidationErrors(team) {
-    const el = elements.validationErrors;
-    if (!el) return;
     const errors = validateDeck(team);
-    if (errors.length) {
-        AudioEngine.play('error');
-        el.textContent = errors[0];
-        el.classList.remove('hidden');
-        el.style.animation = 'none';
-        void el.offsetHeight;
-        el.style.animation = 'shake-error 0.4s ease-in-out';
-    } else {
-        el.classList.add('hidden');
-        el.textContent = '';
-    }
+    if (!errors.length) return;
+    AudioEngine.play('error');
+    showValidationModal(errors[0]);
+}
+
+function showValidationModal(message) {
+    const existing = document.getElementById('validation-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'validation-modal';
+    modal.className = 'validation-modal-overlay';
+    modal.innerHTML = `
+        <div class="validation-modal-box">
+            <div class="validation-modal-header">
+                <i data-lucide="alert-triangle" class="validation-modal-icon"></i>
+                <span>Deck Error</span>
+            </div>
+            <div class="validation-modal-body">${message}</div>
+            <button class="btn btn-red validation-modal-ok">OK</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    initializeLucideIcons(modal);
+
+    const close = () => {
+        modal.classList.add('validation-modal-exit');
+        setTimeout(() => modal.remove(), 250);
+    };
+    modal.querySelector('.validation-modal-ok').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
 }
 
 function selectForTeam(pokemon) {
@@ -1047,8 +1076,8 @@ async function startBattle() {
         usedPlayerPokemon: [], usedOpponentPokemon: [],
         playerThrown: null, opponentThrown: null,
         battleLog: [], battleAnimation: 'waiting',
-        showPoints: false, selectedPokemon: null,
-        throwingAnimation: false, showRoundResult: false,
+        showPoints: false, showPlayerPoints: false, showOpponentPoints: false,
+        selectedPokemon: null, throwingAnimation: false, showRoundResult: false,
         playerStatus: null, opponentStatus: null, lastBattleInfo: null,
         usedPlayerAbilities: [],
         usedOpponentAbilities: [],
@@ -1058,6 +1087,7 @@ async function startBattle() {
         whoThrewFirst: firstTurn
     });
     
+    resetTurnModal();
     showScreen('battle');
 
     // Bench Deal-Out Animation
@@ -1136,24 +1166,43 @@ function updateStatusIndicators() {
     setIndicator(opponentEl, gameState.opponentStatus, gameState.opponentName);
 }
 
-function updateBattleStatus() {
-    if (gameState.activeTurn === 'opponent') {
-        elements.battleStatus.innerHTML = `<i data-lucide="bot"></i> ${gameState.opponentName}'s Turn — thinking...`;
-        initializeLucideIcons(elements.battleStatus);
-        return;
-    }
+let _lastShownTurn = null;
+let _turnModalTimer = null;
 
-    const name = gameState.selectedPokemon?.name || '';
-    const msgs = {
-        waiting:   name
-                     ? `YOUR TURN! <i data-lucide="zap"></i> Tap the arena to throw ${name}!`
-                     : `YOUR TURN! <i data-lucide="hand"></i> Select a Pokemon below!`,
-        revealing: `<i data-lucide="swords"></i> Pokemon facing off...`,
-        battle:    `<i data-lucide="activity"></i> Battle in progress!`,
-        result:    `<i data-lucide="flag"></i> Round complete!`
-    };
-    elements.battleStatus.innerHTML = msgs[gameState.battleAnimation] || '';
-    initializeLucideIcons(elements.battleStatus);
+function updateBattleStatus() {
+    if (gameState.battleAnimation !== 'waiting') return;
+    const key = gameState.activeTurn;
+    if (key === _lastShownTurn) return;
+    _lastShownTurn = key;
+    showTurnModal(key === 'player');
+}
+
+function showTurnModal(isPlayer) {
+    const existing = document.getElementById('turn-modal');
+    if (existing) { existing.remove(); }
+    if (_turnModalTimer) { clearTimeout(_turnModalTimer); _turnModalTimer = null; }
+
+    const modal = document.createElement('div');
+    modal.id = 'turn-modal';
+    modal.className = `turn-modal ${isPlayer ? 'turn-modal-player' : 'turn-modal-opponent'}`;
+    modal.innerHTML = isPlayer
+        ? `<i data-lucide="zap"></i><span>YOUR TURN</span>`
+        : `<i data-lucide="bot"></i><span>${gameState.opponentName}'s TURN</span>`;
+    document.getElementById('app').appendChild(modal);
+    initializeLucideIcons(modal);
+
+    _turnModalTimer = setTimeout(() => {
+        modal.classList.add('turn-modal-exit');
+        setTimeout(() => modal.remove(), 300);
+        _turnModalTimer = null;
+    }, 1500);
+}
+
+function resetTurnModal() {
+    _lastShownTurn = null;
+    const el = document.getElementById('turn-modal');
+    if (el) el.remove();
+    if (_turnModalTimer) { clearTimeout(_turnModalTimer); _turnModalTimer = null; }
 }
 
 function renderBattleArena() {
@@ -1216,7 +1265,7 @@ function renderBattleArena() {
             const opponentCard = createBattlePokemonCard(gameState.opponentThrown, gameState.roundWinner === 'opponent', 'opponent');
 
             if (gameState.battleAnimation === 'revealing') {
-                playerCard.classList.add('revealing');
+                // Player card is already face-up — no reveal animation needed
                 opponentCard.classList.add('revealing');
             }
 
@@ -1351,6 +1400,7 @@ async function throwToBattlefield() {
     }
 
     gameState.playerThrown = pokemon;
+    gameState.playerFaceDown = false;
     gameState.usedPlayerPokemon.push(pokemon.id);
     gameState.throwingAnimation = false;
     gameState.selectedPokemon = null;
@@ -1396,71 +1446,168 @@ async function executeOpponentTurn() {
     }
 }
 
+function animateBattleCardPointsFor(cardEl) {
+    if (!cardEl) return;
+    cardEl.querySelectorAll('.animated-points-val').forEach(el => {
+        const start  = parseInt(el.dataset.start)  || 0;
+        const target = parseInt(el.dataset.target) || 0;
+        if (start === target) { el.textContent = `${target} pts`; return; }
+        const duration = 2200;
+        const t0 = performance.now();
+        (function update(now) {
+            const p = Math.min((now - t0) / duration, 1);
+            el.textContent = `${Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3)))} pts`;
+            if (p < 1) requestAnimationFrame(update);
+        })(t0);
+    });
+}
+
+function triggerFloatingTextsForSide(side, playerCardEl, opponentCardEl, info) {
+    if (!info) return;
+    const isPlayer  = side === 'player';
+    const hasAdv    = isPlayer ? info.playerAdv    : info.opponentAdv;
+    const targetEl  = isPlayer ? playerCardEl  : opponentCardEl;
+    const otherEl   = isPlayer ? opponentCardEl : playerCardEl;
+
+    if (hasAdv) {
+        AudioEngine.play('type-advantage');
+        if (targetEl) createFloatingText(targetEl, '+15 ADVANTAGE!', 'advantage');
+        if (otherEl)  createFloatingText(otherEl,  'WEAKNESS!',      'weakness');
+    }
+
+    const prevStatus = isPlayer ? info.prevPlayerStatus : info.prevOpponentStatus;
+    const finalPts   = isPlayer ? info.playerFinal      : info.opponentFinal;
+    if (prevStatus) {
+        setTimeout(() => {
+            AudioEngine.play('status-effect');
+            if (prevStatus.type === 'paralyzed' && finalPts === 0) {
+                if (targetEl) createFloatingText(targetEl, '⚡ PARALYZED (→ 0)', 'weakness');
+            } else if (prevStatus.pointMod) {
+                if (targetEl) createFloatingText(targetEl, `${prevStatus.pointMod} pts (${prevStatus.name})`, 'status-minus');
+            }
+        }, 700);
+    }
+
+    const abilityMsg = isPlayer ? info.playerAbilityMsg : info.opponentAbilityMsg;
+    if (abilityMsg && targetEl) {
+        setTimeout(() => createFloatingText(targetEl, abilityMsg, 'advantage'), 1100);
+    }
+}
+
 function startClashSequence() {
-    gameState.activeTurn = 'clash';
-    gameState.battleAnimation = 'revealing';
+    gameState.activeTurn        = 'clash';
+    gameState.battleAnimation   = 'revealing';
+    gameState.showPlayerPoints  = false;
+    gameState.showOpponentPoints= false;
     AudioEngine.playBGM('arena-music');
-    gameState.showPoints = false;
     renderBattle();
 
-    const pokemon = gameState.playerThrown;
-    const opponentChoice = gameState.opponentThrown;
-    const winner = calculateRoundWinner(pokemon, opponentChoice);
+    const pokemon       = gameState.playerThrown;
+    const opponentChoice= gameState.opponentThrown;
+    const winner        = calculateRoundWinner(pokemon, opponentChoice);
+    const info          = gameState.lastBattleInfo;
+    const playerFirst   = gameState.whoThrewFirst === 'player';
 
+    // ── Helpers ───────────────────────────────────────────────────
+    function sideHasEffects(side) {
+        if (!info) return false;
+        const isPlayer = side === 'player';
+        return !!(isPlayer ? (info.playerAdv || info.prevPlayerStatus)
+                           : (info.opponentAdv || info.prevOpponentStatus));
+    }
+
+    function popCard(cardEl) {
+        cardEl?.animate([
+            { transform: 'scale(0.93)', opacity: '0.85' },
+            { transform: 'scale(1.06)', opacity: '1'    },
+            { transform: 'scale(1)',    opacity: '1'    }
+        ], { duration: 380, easing: 'cubic-bezier(0.34,1.56,0.64,1)', fill: 'forwards' });
+    }
+
+    // ── Determine which sides have effects ────────────────────────
+    const firstSide  = playerFirst ? 'player' : 'opponent';
+    const secondSide = playerFirst ? 'opponent' : 'player';
+    const p1HasFx    = sideHasEffects(firstSide);
+    const p2HasFx    = sideHasEffects(secondSide);
+
+    // ── Timing constants ──────────────────────────────────────────
+    const FLIP_START = 600;
+    const FLIP_DUR   = 650;
+    const AFTER_FLIP = FLIP_START + FLIP_DUR + 400; // ~1650ms
+    const PHASE_DUR  = 2400;
+    const GAP        = 400;
+
+    // Charge starts after all active phases
+    const CHARGE = p1HasFx && p2HasFx ? AFTER_FLIP + PHASE_DUR + GAP + PHASE_DUR + GAP
+                 : (p1HasFx || p2HasFx) ? AFTER_FLIP + PHASE_DUR + GAP
+                 : FLIP_START + FLIP_DUR + 700; // no effects: charge right after flip
+    const RESULT_T = CHARGE + 500 + 500 + 900 + 1100 + 600;
+
+    // ── Pre-step: flip opponent face-up ───────────────────────────
     setTimeout(() => {
-        gameState.playerFaceDown = false;
-        gameState.opponentFaceDown = false;
-        gameState.showPoints = true;
-        gameState.battleAnimation = 'battle';
+        gameState.opponentFaceDown   = false;
+        gameState.showPlayerPoints   = true;
+        gameState.showOpponentPoints = true;
+        gameState.battleAnimation    = 'battle';
         renderBattle();
-
-        // 3D Y-Axis Card Flip Animation
-        const playerCardEl = elements.arenaContent.querySelector('.battle-pokemon:first-child');
-        const opponentCardEl = elements.arenaContent.querySelector('.battle-pokemon:last-child');
-        
-        playerCardEl?.animate([
-            { transform: 'scale(0.8) rotateY(180deg)', opacity: '0.5' },
-            { transform: 'scale(1) rotateY(0deg)', opacity: '1' }
-        ], { duration: 650, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
-
-        opponentCardEl?.animate([
+        const oEl = elements.arenaContent.querySelector('.battle-pokemon:last-child');
+        oEl?.animate([
             { transform: 'scale(0.8) rotateY(-180deg)', opacity: '0.5' },
-            { transform: 'scale(1) rotateY(0deg)', opacity: '1' }
-        ], { duration: 650, easing: 'cubic-bezier(0.25, 1, 0.5, 1)', fill: 'forwards' });
+            { transform: 'scale(1)   rotateY(0deg)',    opacity: '1'   }
+        ], { duration: FLIP_DUR, easing: 'cubic-bezier(0.25,1,0.5,1)', fill: 'forwards' });
+        animateBattleCardPointsFor(elements.arenaContent.querySelector('.battle-pokemon:first-child'));
+        animateBattleCardPointsFor(elements.arenaContent.querySelector('.battle-pokemon:last-child'));
+    }, FLIP_START);
 
-        const info = gameState.lastBattleInfo;
-        if (info && (info.playerAbilityMsg || info.opponentAbilityMsg)) {
-            elements.battleArena.classList.add('arena-ready-pulse');
-            setTimeout(() => elements.battleArena.classList.remove('arena-ready-pulse'), 800);
-        }
+    // ── Phase 1: first thrower's effects (only if it has any) ─────
+    if (p1HasFx) {
+        setTimeout(() => {
+            const pCard = elements.arenaContent.querySelector('.battle-pokemon:first-child');
+            const oCard = elements.arenaContent.querySelector('.battle-pokemon:last-child');
+            const target = firstSide === 'player' ? pCard : oCard;
+            popCard(target);
+            triggerFloatingTextsForSide(firstSide, pCard, oCard, info);
+            if (info && (info.playerAbilityMsg || info.opponentAbilityMsg)) {
+                elements.battleArena.classList.add('arena-ready-pulse');
+                setTimeout(() => elements.battleArena.classList.remove('arena-ready-pulse'), 800);
+            }
+        }, AFTER_FLIP);
+    }
 
-        triggerFloatingBattleTexts();
-        animateBattleCardPoints();
-    }, 1500);
+    // ── Phase 2: second thrower's effects (only if it has any) ────
+    if (p2HasFx) {
+        const p2Time = p1HasFx ? AFTER_FLIP + PHASE_DUR + GAP : AFTER_FLIP;
+        setTimeout(() => {
+            const pCard = elements.arenaContent.querySelector('.battle-pokemon:first-child');
+            const oCard = elements.arenaContent.querySelector('.battle-pokemon:last-child');
+            const target = secondSide === 'player' ? pCard : oCard;
+            popCard(target);
+            triggerFloatingTextsForSide(secondSide, pCard, oCard, info);
+            if (info && (info.playerAbilityMsg || info.opponentAbilityMsg)) {
+                elements.battleArena.classList.add('arena-ready-pulse');
+                setTimeout(() => elements.battleArena.classList.remove('arena-ready-pulse'), 800);
+            }
+        }, p2Time);
+    }
 
+    // ── Charge + impact ──────────────────────────────────────────
     setTimeout(() => {
-        const playerCardEl = elements.arenaContent.querySelector('.battle-pokemon:first-child');
+        const playerCardEl   = elements.arenaContent.querySelector('.battle-pokemon:first-child');
         const opponentCardEl = elements.arenaContent.querySelector('.battle-pokemon:last-child');
 
-        // Cancel any Web Animations API animations still holding fill:forwards (e.g. the flip).
-        // Without this, their fill overrides the subsequent CSS keyframe animations in some browsers,
-        // causing the charge to be skipped or appear instant.
         [playerCardEl, opponentCardEl].forEach(el => {
             el?.getAnimations().forEach(a => { try { a.commitStyles(); } catch (_) {} a.cancel(); });
         });
-
         playerCardEl?.classList.remove('revealing');
         opponentCardEl?.classList.remove('revealing');
-
         playerCardEl?.classList.add('prep-right');
         opponentCardEl?.classList.add('prep-left');
         AudioEngine.play('charge-up');
 
         setTimeout(() => {
-            playerCardEl?.classList.replace('prep-right', 'charge-right');
+            playerCardEl?.classList.replace('prep-right',  'charge-right');
             opponentCardEl?.classList.replace('prep-left', 'charge-left');
 
-            // fire impact 500ms into the 0.75s charge animation
             setTimeout(() => {
                 AudioEngine.play('clash');
                 showBattleEffect(pokemon.type, opponentChoice.type);
@@ -1469,88 +1616,53 @@ function startClashSequence() {
                 if (winner === 'player') {
                     opponentCardEl?.classList.remove('charge-left');
                     dissolveIntoLight(opponentCardEl);
-                    setTimeout(() => {
-                        playerCardEl?.classList.remove('charge-right');
-                        playerCardEl?.classList.add('return-home');
-                    }, 250);
+                    setTimeout(() => { playerCardEl?.classList.remove('charge-right'); dissolveIntoLight(playerCardEl); }, 900);
                 } else if (winner === 'opponent') {
                     playerCardEl?.classList.remove('charge-right');
                     dissolveIntoLight(playerCardEl);
-                    setTimeout(() => {
-                        opponentCardEl?.classList.remove('charge-left');
-                        opponentCardEl?.classList.add('return-home');
-                    }, 250);
+                    setTimeout(() => { opponentCardEl?.classList.remove('charge-left'); dissolveIntoLight(opponentCardEl); }, 900);
                 } else {
                     playerCardEl?.classList.remove('charge-right');
                     opponentCardEl?.classList.remove('charge-left');
-                    playerCardEl?.classList.add('return-home');
-                    opponentCardEl?.classList.add('return-home');
+                    dissolveIntoLight(playerCardEl);
+                    dissolveIntoLight(opponentCardEl);
                 }
-                setTimeout(() => {
-                    if (winner === 'player') playerCardEl?.classList.add('winner');
-                    else if (winner === 'opponent') opponentCardEl?.classList.add('winner');
-                }, 600);
             }, 500);
         }, 500);
-    }, 2900);
+    }, CHARGE);
 
+    // ── Result ───────────────────────────────────────────────────
     setTimeout(() => {
-        gameState.roundWinner = winner;
+        gameState.roundWinner     = winner;
         gameState.battleAnimation = 'result';
-
-        const info = gameState.lastBattleInfo;
         if (info) {
-            gameState.playerStatus = info.newPlayerStatus;
+            gameState.playerStatus   = info.newPlayerStatus;
             gameState.opponentStatus = info.newOpponentStatus;
         }
 
-        const log = [
-            `Round ${gameState.currentRound}: ${pokemon.name} (${pokemon.points} CP) vs ${opponentChoice.name} (${opponentChoice.points} CP)`
-        ];
+        const log = [`Round ${gameState.currentRound}: ${pokemon.name} (${pokemon.points} CP) vs ${opponentChoice.name} (${opponentChoice.points} CP)`];
         if (info) {
-            if (info.playerAdv) {
-                log.push(`🔥 Matchup: ${pokemon.name}'s ${pokemon.type} is Super Effective against ${opponentChoice.name}! (+15 CP)`);
-                AudioEngine.play('type-advantage');
-            }
-            if (info.opponentAdv) {
-                log.push(`⚡ Matchup: ${opponentChoice.name}'s ${opponentChoice.type} is Super Effective against ${pokemon.name}! (+15 CP)`);
-                AudioEngine.play('type-advantage');
-            }
-            // Add Special Ability Logs
-            if (info.playerAbilityMsg)   log.push(info.playerAbilityMsg);
-            if (info.opponentAbilityMsg) log.push(info.opponentAbilityMsg);
+            if (info.playerAdv)       log.push(`🔥 Matchup: ${pokemon.name}'s ${pokemon.type} is Super Effective against ${opponentChoice.name}! (+15 CP)`);
+            if (info.opponentAdv)     log.push(`⚡ Matchup: ${opponentChoice.name}'s ${opponentChoice.type} is Super Effective against ${pokemon.name}! (+15 CP)`);
+            if (info.playerAbilityMsg)  log.push(info.playerAbilityMsg);
+            if (info.opponentAbilityMsg)log.push(info.opponentAbilityMsg);
         }
-        
-        if (winner === 'player') {
-            spawnScoreOrb('player');
-            AudioEngine.play('round-win');
-            gameState.playerScore++;
-            log.push(`✓ ${pokemon.name} wins this round!`);
-        } else if (winner === 'opponent') {
-            spawnScoreOrb('opponent');
-            AudioEngine.play('round-lose');
-            gameState.opponentScore++;
-            log.push(`✗ ${opponentChoice.name} wins this round!`);
-        } else {
-            AudioEngine.play('round-draw');
-            log.push("🤝 It's a tie!");
-        }
+        if (winner === 'player')   { spawnScoreOrb('player');   AudioEngine.play('round-win');  gameState.playerScore++;   log.push(`✓ ${pokemon.name} wins this round!`); }
+        else if (winner === 'opponent') { spawnScoreOrb('opponent'); AudioEngine.play('round-lose'); gameState.opponentScore++; log.push(`✗ ${opponentChoice.name} wins this round!`); }
+        else                       { AudioEngine.play('round-draw'); log.push("🤝 It's a tie!"); }
 
         if (info) {
-            if (info.playerMsg)   log.push(info.playerMsg);
-            if (info.opponentMsg) log.push(info.opponentMsg);
+            if (info.playerMsg)         log.push(info.playerMsg);
+            if (info.opponentMsg)       log.push(info.opponentMsg);
             if (info.newOpponentStatus) log.push(`${info.newOpponentStatus.emoji} ${gameState.opponentName}: ${info.newOpponentStatus.name} next round!`);
             if (info.newPlayerStatus)   log.push(`${info.newPlayerStatus.emoji} YOU: ${info.newPlayerStatus.name} next round!`);
         }
-
         gameState.battleLog.push(...log);
-
         renderBattle();
 
-        // Enforce competitive match limits: first to reach 3 points wins!
         const isLast = gameState.playerScore === 3 || gameState.opponentScore === 3 || gameState.usedPlayerPokemon.length === 6;
         setTimeout(isLast ? endGame : nextRound, 1500);
-    }, 5500);
+    }, RESULT_T);
 }
 
 function applyStatusEffect(basePoints, status) {
@@ -1910,6 +2022,7 @@ function showRoundResult() {
 }
 
 function nextRound() {
+    resetTurnModal();
     gameState.currentRound++;
     
     // Whoever won the previous round goes first!
@@ -1920,7 +2033,8 @@ function nextRound() {
     Object.assign(gameState, {
         playerThrown: null, opponentThrown: null,
         roundWinner: null, battleAnimation: 'waiting',
-        showPoints: false, selectedPokemon: null, throwingAnimation: false,
+        showPoints: false, showPlayerPoints: false, showOpponentPoints: false,
+        selectedPokemon: null, throwingAnimation: false,
         playerFaceDown: true,
         opponentFaceDown: true,
         activeTurn: nextFirst,

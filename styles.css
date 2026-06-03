@@ -157,23 +157,14 @@ body {
     margin-bottom: 0.4rem;
 }
 
-.logo-icon {
-    font-size: 1.6rem;
-    filter: drop-shadow(0 0 8px #ffd700);
-    animation: logo-pulse 2s ease-in-out infinite alternate;
-}
-
-@keyframes logo-pulse {
-    from { filter: drop-shadow(0 0 6px #ffd700); }
-    to   { filter: drop-shadow(0 0 18px #ffd700) drop-shadow(0 0 35px rgba(255,215,0,0.5)); }
-}
+.logo-icon { font-size: 1.6rem; }
 
 .header h1 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
     font-weight: 900;
     color: white;
-    text-shadow: 0 0 20px rgba(124,58,237,0.9), 0 0 40px rgba(124,58,237,0.4);
+    text-shadow: none;
     letter-spacing: 0.04em;
     line-height: 1.1;
 }
@@ -197,13 +188,13 @@ body {
     transition: all 0.3s;
 }
 
-.coin-emoji { font-size: 1rem; filter: drop-shadow(0 0 4px #ffd700); }
+.coin-emoji { font-size: 1rem; }
 #coins-amount {
     font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
     font-weight: 700;
     color: #ffd700;
-    text-shadow: 0 0 8px rgba(255,215,0,0.8);
+    text-shadow: none;
     min-width: 2.5rem;
     text-align: center;
 }
@@ -666,6 +657,29 @@ body {
 .fairy     { background: linear-gradient(150deg, #8b0060 0%, #f06292 100%); border-color: rgba(240,98,146,0.45); box-shadow: 0 5px 18px rgba(139,0,96,0.4); }
 
 
+/* ── Tier top/bottom stripe (pokeball design indicators) ── */
+.pokemon-card.poke,
+.battle-pokemon.poke {
+    border-top: 4px solid #ef4444;
+    border-bottom: 4px solid rgba(255,255,255,0.7);
+}
+.pokemon-card.great,
+.battle-pokemon.great {
+    border-top: 4px solid #3b82f6;
+    border-bottom: 4px solid rgba(255,255,255,0.7);
+}
+.pokemon-card.ultra,
+.battle-pokemon.ultra {
+    border-top: 4px solid #ffd700;
+    border-bottom: 4px solid #1e1b4b;
+    box-shadow: 0 0 14px rgba(255,215,0,0.25), 0 5px 18px rgba(0,0,0,0.4);
+}
+
+/* Also apply to reveal modal face-up card */
+.reveal-card-back-face.poke  { border-top: 4px solid #ef4444;  border-bottom: 4px solid rgba(255,255,255,0.7); }
+.reveal-card-back-face.great { border-top: 4px solid #3b82f6;  border-bottom: 4px solid rgba(255,255,255,0.7); }
+.reveal-card-back-face.ultra { border-top: 4px solid #ffd700;  border-bottom: 4px solid #1e1b4b; }
+
 /* ── Rarity Borders ── */
 .common    { border-color: rgba(120,144,156,0.55) !important; }
 .uncommon  { border-color: rgba(46,204,113,0.65) !important; }
@@ -746,7 +760,7 @@ body {
     font-size: 1.1rem;
     font-weight: 900;
     color: white;
-    text-shadow: 0 0 10px rgba(249,115,22,0.8);
+    text-shadow: none;
 }
 
 .score-display {
@@ -971,13 +985,8 @@ body {
     font-size: 1.3rem;
     font-weight: 900;
     color: white;
-    text-shadow: 0 0 15px rgba(249,115,22,1), 0 0 35px rgba(249,115,22,0.6);
-    animation: vs-pulse 0.9s ease-in-out infinite alternate;
+    text-shadow: none;
     flex-shrink: 0;
-}
-@keyframes vs-pulse {
-    from { text-shadow: 0 0 10px rgba(249,115,22,0.8), 0 0 20px rgba(249,115,22,0.4); transform: scale(1); }
-    to   { text-shadow: 0 0 25px rgba(249,115,22,1), 0 0 50px rgba(249,115,22,0.8); transform: scale(1.12); }
 }
 
 /* ── Battle Pokemon Cards — same base layout as .pokemon-card ── */
@@ -1032,7 +1041,7 @@ body {
 }
 @keyframes reveal-pop {
     from { transform: scale(0.2) rotate(-15deg); opacity: 0; }
-    to   { transform: scale(1) rotate(2deg); opacity: 1; }
+    to   { transform: scale(1) rotate(0deg);     opacity: 1; }
 }
 
 .battle-pokemon.battling {
@@ -1555,24 +1564,35 @@ body {
 
 /* ── Face-Down Medallion Styling ── */
 .battle-pokemon.face-down {
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
-    border-style: dashed;
+    background: #0f1729 !important;
+    box-shadow: none !important;
+    border-color: rgba(255,255,255,0.15) !important;
+    padding: 0 !important;
+    gap: 0 !important;
 }
 
-.battle-pokemon.face-down * {
-    display: none; /* Hide standard card content */
+.battle-pokemon.face-down > * {
+    display: none;
 }
 
+/* Card-back fills the entire card, same as the buy reveal modal */
 .battle-pokemon.face-down .card-back {
-    display: flex !important; /* Force show the tier indicator */
-    background: transparent !important; /* Use the card's color instead of the ball gradient */
-    border: none;
-    box-shadow: none;
+    display: flex !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    border-radius: inherit;
 }
 
-.battle-pokemon.face-down .card-back .ball-label {
-    color: rgba(255,255,255,0.7);
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+/* Scale down the center button on small bench cards */
+#battle-screen .team-grid .battle-pokemon.face-down .card-back .ball-center {
+    width: 1.4rem;
+    height: 1.4rem;
+}
+#battle-screen .team-grid .battle-pokemon.face-down .card-back .ball-center::after {
+    width: 0.5rem;
+    height: 0.5rem;
 }
 
 /* Pulse for face-down cards in arena */
@@ -1818,45 +1838,60 @@ body {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.8) !important;
 }
 
-/* ── Floating Battle Texts ── */
+/* ── Floating Battle Texts — RPG pill badges ── */
+@keyframes float-rpg {
+    0%   { transform: translate(-50%, 0px)   scale(0.5);  opacity: 0; }
+    18%  { transform: translate(-50%, -14px) scale(1.12); opacity: 1; }
+    30%  { transform: translate(-50%, -20px) scale(1);    opacity: 1; }
+    72%  { transform: translate(-50%, -46px) scale(1);    opacity: 1; }
+    100% { transform: translate(-50%, -68px) scale(0.88); opacity: 0; }
+}
+@keyframes float-up-fade {
+    0%   { transform: translate(-50%, 15px)  scale(0.7); opacity: 0; }
+    15%  { transform: translate(-50%, -10px) scale(1.15);opacity: 1; }
+    100% { transform: translate(-50%, -65px) scale(0.9); opacity: 0; }
+}
+
 .floating-battle-text {
     position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 2rem;
+    border: 2.5px solid #ffffff;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.62rem;
     font-weight: 900;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+    letter-spacing: 0.02em;
     pointer-events: none;
     z-index: 100;
     white-space: nowrap;
-    animation: float-up-fade 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    text-shadow: none;
+    animation: float-rpg 3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
+.float-icon { width: 0.65rem; height: 0.65rem; flex-shrink: 0; }
+.float-icon svg { width: 100%; height: 100%; }
 
-@keyframes float-up-fade {
-    0% {
-        transform: translate(-50%, 15px) scale(0.7);
-        opacity: 0;
-    }
-    15% {
-        transform: translate(-50%, -10px) scale(1.15);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -65px) scale(0.9);
-        opacity: 0;
-    }
-}
-
+/* Advantage: yellow-orange CTA style */
 .float-advantage {
-    color: #00ff87;
-    text-shadow: 0 0 12px rgba(0, 255, 135, 0.6), 0 2px 5px #000;
+    background: linear-gradient(180deg, var(--rpg-cta-top) 0%, var(--rpg-cta-bot) 100%);
+    box-shadow: 0 3px 0 var(--rpg-cta-shadow), 0 6px 14px rgba(165,96,0,0.35);
+    color: var(--rpg-navy);
 }
+
+/* Weakness: red */
 .float-weakness {
-    color: #ff4444;
-    text-shadow: 0 0 12px rgba(255, 68, 68, 0.6), 0 2px 5px #000;
+    background: linear-gradient(180deg, #ff6b6b 0%, var(--rpg-red-nav) 100%);
+    box-shadow: 0 3px 0 var(--rpg-red-shadow), 0 6px 14px rgba(139,0,0,0.3);
+    color: #ffffff;
 }
+
+/* Status effects: sky-blue */
 .float-status-minus {
-    color: #ff8800;
-    text-shadow: 0 0 12px rgba(255, 136, 0, 0.6), 0 2px 5px #000;
+    background: linear-gradient(180deg, var(--rpg-sky) 0%, var(--rpg-sky-dark) 100%);
+    box-shadow: 0 3px 0 var(--rpg-sky-dark), 0 6px 14px rgba(0,85,128,0.3);
+    color: #ffffff;
 }
 
 /* ── Mobile Optimizations ── */
@@ -2047,8 +2082,7 @@ body {
     margin-bottom: 1rem;
     animation: finding-spin 1.5s linear infinite;
     display: inline-block;
-    color: var(--neon-cyan);
-    filter: drop-shadow(0 0 8px var(--neon-cyan));
+    color: var(--rpg-sky-dark);
 }
 .finding-icon svg { width: 100%; height: 100%; }
 
@@ -2107,10 +2141,9 @@ body {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
     font-weight: 900;
-    color: #f97316;
-    text-shadow: 0 0 20px rgba(249,115,22,1), 0 0 50px rgba(249,115,22,0.5);
+    color: var(--rpg-cta-bot);
+    text-shadow: none;
     margin-bottom: 0.5rem;
-    animation: vs-pulse 0.9s ease-in-out infinite alternate;
 }
 
 .found-name {
@@ -2118,8 +2151,8 @@ body {
     font-size: 1.8rem;
     font-weight: 900;
     letter-spacing: 0.05em;
-    color: var(--neon-gold);
-    text-shadow: 0 0 25px rgba(255,215,0,0.9), 0 0 60px rgba(255,215,0,0.4);
+    color: var(--rpg-navy);
+    text-shadow: none;
     margin-bottom: 0.4rem;
 }
 
@@ -2282,3 +2315,519 @@ body {
     display: inline-block;
 }
 .crown-icon svg { width: 100%; height: 100%; }
+
+
+/* =====================================================
+   ANIME CASUAL RPG THEME — EXACT SPEC
+   Colors, 2.5D depth, no layout changes
+   ===================================================== */
+
+/* ── Token map ── */
+:root {
+    --rpg-sky:        #00B2FE;
+    --rpg-sky-dark:   #0082C8;
+    --rpg-cta-top:    #FFC312;
+    --rpg-cta-bot:    #F79F1F;
+    --rpg-cta-shadow: #A56000;
+    --rpg-sec-top:    #48CAE4;
+    --rpg-sec-bot:    #0077B6;
+    --rpg-sec-shadow: #005580;
+    --rpg-navy:       #0B3C5D;
+    --rpg-red-nav:    #D32F2F;
+    --rpg-red-shadow: #8B0000;
+}
+
+/* ── Screen ambient tint → sky blue ── */
+#collection-screen  { background: radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,178,254,0.2) 0%, transparent 65%), radial-gradient(ellipse 60% 40% at 80% 100%, rgba(0,130,200,0.12) 0%, transparent 60%); }
+#team-select-screen { background: radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,178,254,0.2) 0%, transparent 65%), radial-gradient(ellipse 60% 40% at 20% 100%, rgba(0,119,182,0.12) 0%, transparent 60%); }
+#game-over-screen   { background: radial-gradient(ellipse 100% 80% at 50% 50%, rgba(0,178,254,0.22) 0%, transparent 70%); }
+
+/* ── Header bars ── */
+#collection-screen .header,
+#team-select-screen .header {
+    background: linear-gradient(180deg, #00B2FE 0%, #0082C8 100%);
+    border-radius: 0.9rem;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 0 var(--rpg-sky-dark), 0 6px 18px rgba(0,130,200,0.35);
+    padding: 0.55rem 0.9rem;
+    margin-bottom: 0.9rem;
+}
+#collection-screen .header h1,
+#team-select-screen .header h1 { color: var(--rpg-navy); text-shadow: none; }
+#collection-screen .logo-icon  { filter: none; }
+
+/* ── Coins display ── */
+.coins-display {
+    background: linear-gradient(180deg, #ffffff 0%, #e8f6ff 100%);
+    border: 3px solid #ffffff;
+    box-shadow: 0 3px 0 var(--rpg-sky-dark);
+    border-radius: 2rem;
+}
+#coins-amount        { color: var(--rpg-navy); text-shadow: none; }
+.coin-label          { color: var(--rpg-sky-dark); }
+.coin-emoji svg      { color: #f59e0b; }
+
+/* ── All buttons: 2.5D pop base ── */
+.btn {
+    border-radius: 2rem;
+    border: 3px solid #ffffff;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn:active { transform: translateY(3px) !important; }
+
+/* CTA (Battle / Start Battle / Forfeit confirm) — yellow-orange */
+.btn-red {
+    background: linear-gradient(180deg, var(--rpg-cta-top) 0%, var(--rpg-cta-bot) 100%);
+    border-color: #ffffff;
+    box-shadow: 0 4px 0 var(--rpg-cta-shadow), 0 6px 14px rgba(165,96,0,0.35);
+    color: var(--rpg-navy);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+}
+.btn-red:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--rpg-cta-shadow), 0 8px 18px rgba(165,96,0,0.45);
+}
+
+/* Secondary (Buy, Add to Collection) — sky-blue gradient */
+.btn-green {
+    background: linear-gradient(180deg, var(--rpg-sec-top) 0%, var(--rpg-sec-bot) 100%);
+    border-color: #ffffff;
+    box-shadow: 0 4px 0 var(--rpg-sec-shadow), 0 6px 14px rgba(0,85,128,0.35);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+.btn-green:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--rpg-sec-shadow), 0 8px 18px rgba(0,85,128,0.45);
+}
+.btn-blue {
+    background: linear-gradient(180deg, var(--rpg-sec-top) 0%, var(--rpg-sec-bot) 100%);
+    border-color: #ffffff;
+    box-shadow: 0 4px 0 var(--rpg-sec-shadow), 0 6px 14px rgba(0,85,128,0.35);
+    color: #ffffff;
+}
+.btn-blue:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--rpg-sec-shadow), 0 8px 18px rgba(0,85,128,0.45);
+}
+
+/* Ghost back/forfeit — white outline on sky */
+.btn-gray {
+    background: rgba(255,255,255,0.14);
+    border: 3px solid rgba(255,255,255,0.55);
+    color: #ffffff;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+    border-radius: 2rem;
+}
+.btn-gray:hover:not(:disabled) {
+    background: rgba(255,255,255,0.22);
+    transform: translateY(-2px);
+}
+
+/* ── Section headers → sky pill ── */
+.section-header span {
+    background: linear-gradient(180deg, var(--rpg-sky) 0%, var(--rpg-sky-dark) 100%);
+    color: #ffffff;
+    padding: 0.22rem 1.1rem;
+    border-radius: 2rem;
+    border: 2px solid rgba(255,255,255,0.45);
+    box-shadow: 0 3px 0 var(--rpg-sky-dark);
+    letter-spacing: 0.18em;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* ── Rating chips ── */
+.rating-chip {
+    background: linear-gradient(180deg, #ffffff 0%, #ddf0ff 100%);
+    border: 2px solid #ffffff;
+    box-shadow: 0 3px 0 var(--rpg-sky-dark);
+    color: var(--rpg-navy);
+    font-weight: 800;
+}
+.rating-chip.cpu {
+    background: linear-gradient(180deg, #ffe0b2 0%, #ffb74d 100%);
+    border-color: #ffffff;
+    box-shadow: 0 3px 0 var(--rpg-cta-shadow);
+    color: var(--rpg-navy);
+}
+
+/* ── Battle header ── */
+.battle-header {
+    background: linear-gradient(180deg, var(--rpg-sky) 0%, var(--rpg-sky-dark) 100%);
+    border-radius: 0.9rem;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 0 var(--rpg-sky-dark), 0 6px 16px rgba(0,130,200,0.3);
+    padding: 0.45rem 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.round-info {
+    background: rgba(255,255,255,0.22);
+    border: 2px solid rgba(255,255,255,0.5);
+    border-radius: 2rem;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.round-num   { color: #fff; text-shadow: none; }
+.round-label { color: rgba(255,255,255,0.75); }
+.score-item  { border-radius: 2rem; border-width: 2px; font-weight: 900; }
+.player-score {
+    background: linear-gradient(180deg, var(--rpg-sky) 0%, var(--rpg-sky-dark) 100%);
+    border: 2px solid #ffffff;
+    box-shadow: 0 3px 0 var(--rpg-sky-dark);
+    color: #ffffff;
+}
+.opponent-score {
+    background: linear-gradient(180deg, #ff6b6b 0%, var(--rpg-red-nav) 100%);
+    border: 2px solid #ffffff;
+    box-shadow: 0 3px 0 var(--rpg-red-shadow);
+    color: #ffffff;
+}
+.score-sep { color: rgba(255,255,255,0.7); }
+
+/* ── Battle section labels ── */
+.opponent-section h3,
+.player-section h3 {
+    color: var(--rpg-sky);
+    -webkit-text-fill-color: unset;
+    filter: none;
+    text-shadow: none;
+}
+
+/* ── Battle status pill ── */
+#battle-status {
+    background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(0,130,200,0.12) 100%);
+    border: 2px solid rgba(255,255,255,0.35);
+    border-radius: 2rem;
+    padding: 0.25rem 1rem;
+    font-weight: 800;
+    font-size: 0.7rem;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+/* ── Game over modal ── */
+.game-over-modal {
+    background: linear-gradient(160deg, #ddf4ff 0%, #b3e8ff 100%);
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 0 var(--rpg-sky-dark), 0 12px 40px rgba(0,130,200,0.3);
+    border-radius: 1.25rem;
+}
+.game-over-modal h2 {
+    color: var(--rpg-navy);
+    -webkit-text-fill-color: var(--rpg-navy);
+    background: none;
+    text-shadow: none;
+}
+.game-over-modal p { color: var(--rpg-navy); }
+.game-over-icon { color: var(--rpg-cta-bot); filter: none; }
+
+/* ── Finding opponent modal ── */
+.finding-modal-content {
+    background: linear-gradient(160deg, #ddf4ff 0%, #b3e8ff 100%);
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 0 var(--rpg-sky-dark);
+    border-radius: 1.25rem;
+    color: var(--rpg-navy);
+}
+.finding-title { color: var(--rpg-navy); text-shadow: none; }
+.found-vs      { color: var(--rpg-cta-bot); text-shadow: none; }
+.found-name    { color: var(--rpg-navy); font-weight: 900; }
+
+
+/* ── Finding modal details ── */
+.finding-dots span {
+    background: var(--rpg-sky-dark);
+}
+.found-sub     { color: var(--rpg-sky-dark); }
+.found-reveal  { color: var(--rpg-navy); }
+
+/* ── Team select "Choose 6" subtitle ── */
+#team-select-screen .header p { color: rgba(255,255,255,0.88); }
+
+/* ── Selected team heading ── */
+.team-section h2 {
+    color: var(--rpg-navy);
+    -webkit-text-fill-color: var(--rpg-navy);
+    background: none;
+    text-shadow: none;
+}
+
+/* ── Validation errors ── */
+.validation-errors {
+    background: rgba(255,165,0,0.12);
+    border-color: var(--rpg-cta-bot);
+    color: var(--rpg-navy);
+    border-radius: 0.75rem;
+    border-width: 2px;
+}
+
+/* ── Game over title text (set by JS) ── */
+#game-over-title { color: var(--rpg-navy) !important; -webkit-text-fill-color: var(--rpg-navy) !important; }
+#final-score     { color: var(--rpg-sky-dark) !important; }
+
+/* ── Battle arena VS text ── */
+.battle-vs .vs-text {
+    color: var(--rpg-cta-bot);
+    text-shadow: 0 0 10px var(--rpg-cta-top), 0 2px 0 var(--rpg-cta-shadow);
+}
+
+/* ── Arena title & subtitle ── */
+.arena-title  { color: var(--rpg-sky); text-shadow: 0 0 14px rgba(0,178,254,0.6); }
+.arena-subtitle { color: rgba(255,255,255,0.75); }
+.arena-ready  { color: var(--rpg-cta-top); text-shadow: 0 0 10px rgba(255,195,18,0.8); }
+
+/* ── Round slam result text ── */
+.round-slam.result-win  { color: var(--rpg-sky); }
+.round-slam.result-lose { color: #ff6b6b; }
+.round-slam.result-draw { color: var(--rpg-cta-top); }
+
+
+/* ── Validation Error Modal ── */
+@keyframes val-modal-in {
+    from { opacity: 0; transform: scale(0.88) translateY(12px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+@keyframes val-modal-out {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.9) translateY(8px); }
+}
+
+.validation-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 6000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6,9,26,0.75);
+    backdrop-filter: blur(6px);
+}
+.validation-modal-overlay.validation-modal-exit .validation-modal-box {
+    animation: val-modal-out 0.25s ease forwards;
+}
+
+.validation-modal-box {
+    background: linear-gradient(160deg, #ddf4ff 0%, #b8e8ff 100%);
+    border: 3px solid #ffffff;
+    box-shadow: 0 6px 0 var(--rpg-sky-dark), 0 14px 40px rgba(0,130,200,0.35);
+    border-radius: 1.2rem;
+    padding: 1.4rem 1.6rem 1.2rem;
+    max-width: 320px;
+    width: calc(100vw - 2.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    animation: val-modal-in 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    text-align: center;
+}
+
+.validation-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--rpg-navy);
+}
+.validation-modal-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--rpg-cta-bot);
+}
+.validation-modal-icon svg { width: 100%; height: 100%; }
+
+.validation-modal-body {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--rpg-navy);
+    line-height: 1.5;
+}
+
+.validation-modal-ok {
+    min-width: 6rem;
+    padding: 0.5rem 2rem;
+}
+
+
+/* ── Turn Status Indicator ── */
+.turn-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.28rem 1rem;
+    border-radius: 2rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 900;
+    border: 2.5px solid #ffffff;
+    margin-bottom: 0.3rem;
+    flex-shrink: 0;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    min-height: 2rem;
+}
+.turn-status svg { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+
+.turn-player {
+    background: linear-gradient(180deg, var(--rpg-sky) 0%, var(--rpg-sky-dark) 100%);
+    box-shadow: 0 3px 0 var(--rpg-sky-dark);
+    color: #ffffff;
+}
+.turn-opponent {
+    background: linear-gradient(180deg, #ff6b6b 0%, var(--rpg-red-nav) 100%);
+    box-shadow: 0 3px 0 var(--rpg-red-shadow);
+    color: #ffffff;
+}
+.turn-result {
+    background: linear-gradient(180deg, var(--rpg-cta-top) 0%, var(--rpg-cta-bot) 100%);
+    box-shadow: 0 3px 0 var(--rpg-cta-shadow);
+    color: var(--rpg-navy);
+}
+
+
+/* ── Turn Announcement Banner ── */
+@keyframes turn-modal-in {
+    0%   { opacity: 0; transform: translateY(-100%); }
+    60%  { opacity: 1; transform: translateY(4px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes turn-modal-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-100%); }
+}
+
+.turn-modal {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 5500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    padding: 0.85rem 2rem;
+    border-radius: 0;
+    border-top: 3px solid #ffffff;
+    border-bottom: 3px solid #ffffff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    animation: turn-modal-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.turn-modal.turn-modal-exit {
+    animation: turn-modal-out 0.3s ease forwards;
+}
+.turn-modal svg { width: 1.2rem; height: 1.2rem; flex-shrink: 0; }
+
+.turn-modal-player {
+    background: linear-gradient(180deg, var(--rpg-sky) 0%, var(--rpg-sky-dark) 100%);
+    box-shadow: 0 4px 0 var(--rpg-sky-dark);
+    color: #ffffff;
+}
+.turn-modal-opponent {
+    background: linear-gradient(180deg, #ff6b6b 0%, var(--rpg-red-nav) 100%);
+    box-shadow: 0 4px 0 var(--rpg-red-shadow);
+    color: #ffffff;
+}
+
+
+/* ── Battle Arena — RPG theme ── */
+.battle-arena {
+    background: linear-gradient(160deg, #ddf4ff 0%, #b3e8ff 100%);
+    border: 3px solid #ffffff;
+    box-shadow: 0 5px 0 var(--rpg-sky-dark), 0 10px 28px rgba(0,130,200,0.25);
+}
+
+/* Grid lines: light sky-blue */
+.battle-arena::before {
+    background-image:
+        linear-gradient(rgba(0,130,200,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,130,200,0.1) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+/* Corner flares: sky-teal */
+.battle-arena::after {
+    background:
+        radial-gradient(circle at 0% 0%,   rgba(0,178,254,0.18) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(13,148,136,0.18) 0%, transparent 40%);
+}
+
+/* Ready-to-throw state: yellow-orange CTA */
+.battle-arena.ready {
+    border-color: var(--rpg-cta-top);
+    box-shadow: 0 5px 0 var(--rpg-cta-shadow), 0 10px 28px rgba(255,195,18,0.35);
+    animation: arena-ready-pulse-rpg 1.4s ease-in-out infinite;
+}
+@keyframes arena-ready-pulse-rpg {
+    0%, 100% { box-shadow: 0 5px 0 var(--rpg-cta-shadow), 0 8px 20px rgba(255,195,18,0.25); }
+    50%       { box-shadow: 0 5px 0 var(--rpg-cta-shadow), 0 14px 36px rgba(255,195,18,0.5); }
+}
+
+/* Arena idle text */
+.arena-title    { color: var(--rpg-navy);     text-shadow: none; }
+.arena-subtitle { color: var(--rpg-sky-dark); text-shadow: none; }
+.arena-ready    { color: var(--rpg-cta-bot);  text-shadow: none; }
+
+/* VS text between cards */
+.battle-vs .vs-text {
+    color: var(--rpg-cta-bot);
+    text-shadow: none;
+    animation: none;
+    -webkit-text-stroke: 1px var(--rpg-cta-shadow);
+}
+
+/* Round result slam text */
+.slam-round { color: var(--rpg-sky-dark); opacity: 0.8; }
+.round-slam.result-win  { color: var(--rpg-sky); }
+.round-slam.result-lose { color: var(--rpg-red-nav); }
+.round-slam.result-draw { color: var(--rpg-cta-top); }
+
+/* Advantage / weakness corner badge */
+.battle-adv-badge.adv {
+    background: var(--rpg-cta-top);
+    box-shadow: 0 3px 0 var(--rpg-cta-shadow);
+    color: var(--rpg-navy);
+    animation: none;
+    transform: none;
+}
+.battle-adv-badge.disadv {
+    background: rgba(211,47,47,0.22);
+    border-color: var(--rpg-red-nav);
+    color: var(--rpg-red-nav);
+}
+
+/* Status badges on cards */
+.status-badge {
+    border-radius: 2rem;
+    border-width: 2px;
+    font-weight: 800;
+}
+
+/* Screen flashes — keep functional colors but tone down opacity */
+.screen-flash.flash-win  { background: radial-gradient(ellipse at center, rgba(0,178,254,0.5) 0%, transparent 65%); }
+.screen-flash.flash-lose { background: radial-gradient(ellipse at center, rgba(211,47,47,0.5)  0%, transparent 65%); }
+.screen-flash.flash-draw { background: radial-gradient(ellipse at center, rgba(255,195,18,0.5)  0%, transparent 65%); }
+
+/* Battle formula annotation */
+.battle-formula { color: var(--rpg-sky-dark); opacity: 0.75; }
+
+/* Winner glow: sky blue instead of green */
+.battle-pokemon.winner {
+    box-shadow: 0 0 18px rgba(0,178,254,0.85), 0 0 40px rgba(0,178,254,0.3);
+    border-color: var(--rpg-sky);
+}
+
+/* Has-advantage border */
+.battle-pokemon.has-advantage {
+    border-color: var(--rpg-cta-top) !important;
+    box-shadow: 0 4px 0 var(--rpg-cta-shadow), 0 0 18px rgba(255,195,18,0.45);
+}
+
