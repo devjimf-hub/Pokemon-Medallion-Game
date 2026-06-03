@@ -1,4 +1,4 @@
-/* =====================================================
+﻿/* =====================================================
    POKEMON MEDALLION — Dark Space Theme
    ===================================================== */
 
@@ -1661,43 +1661,65 @@ body {
     to   { opacity: 1; filter: brightness(1.2); }
 }
 
-/* Status indicators above the arena */
+/* Status indicators — inside the arena, opponent top-right / player bottom-left */
 .status-indicators {
-    display: flex;
-    gap: 0.4rem;
-    justify-content: space-between;
-    min-height: 1.4rem;
-    flex-shrink: 0;
-    margin-bottom: 0.25rem;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
 }
-
-.status-indicator {
-    flex: 1;
-    font-size: 0.58rem;
-    font-weight: 800;
-    text-align: center;
-    padding: 0.2rem 0.5rem;
-    border-radius: 0.4rem;
-    letter-spacing: 0.02em;
-    transition: all 0.35s ease;
-    opacity: 0;
-    min-height: 1.4rem;
+#opponent-status-indicator {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
 }
-
+#player-status-indicator {
+    position: absolute;
+    bottom: 0.45rem;
+    left: 0.45rem;
+}
+.status-indicator { display: none; }
 .status-indicator.active {
-    opacity: 1;
-    animation: status-indicator-pulse 1.3s ease-in-out infinite alternate;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 2rem;
+    border: 2px solid #ffffff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.52rem;
+    font-weight: 900;
+    white-space: nowrap;
+    color: #ffffff;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+    animation: status-pill-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
 }
-@keyframes status-indicator-pulse {
-    from { transform: none; }
-    to   { transform: scale(1.03); filter: brightness(1.15); }
+@keyframes status-pill-in {
+    from { transform: scale(0.6); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
 }
+.status-indicator .status-icon { width: 0.55rem; height: 0.55rem; flex-shrink: 0; }
+.status-indicator .status-icon svg { width: 100%; height: 100%; }
+.status-indicator .status-desc { opacity: 0.8; font-size: 0.44rem; font-weight: 700; margin-left: 0.1rem; }
 
-.status-indicator .status-desc {
-    opacity: 0.75;
-    font-weight: 600;
-    margin-left: 0.2rem;
-}
+/* Per-status colors */
+.status-indicator.status-burned     { background: linear-gradient(135deg,#ff6b35,#c0392b); box-shadow: 0 2px 0 #7a0000; }
+.status-indicator.status-soaked     { background: linear-gradient(135deg,var(--rpg-sky),var(--rpg-sky-dark)); box-shadow: 0 2px 0 var(--rpg-sky-dark); }
+.status-indicator.status-seeded     { background: linear-gradient(135deg,#4ade80,#16a34a); box-shadow: 0 2px 0 #14532d; }
+.status-indicator.status-paralyzed  { background: linear-gradient(135deg,var(--rpg-cta-top),var(--rpg-cta-bot)); color: var(--rpg-navy); box-shadow: 0 2px 0 var(--rpg-cta-shadow); }
+.status-indicator.status-confused   { background: linear-gradient(135deg,#e056fd,#7a1090); box-shadow: 0 2px 0 #4a0060; }
+.status-indicator.status-cursed     { background: linear-gradient(135deg,#7c4dff,#22007a); box-shadow: 0 2px 0 #11003d; }
+.status-indicator.status-flinched   { background: linear-gradient(135deg,#f87171,var(--rpg-red-nav)); box-shadow: 0 2px 0 var(--rpg-red-shadow); }
+.status-indicator.status-frozen     { background: linear-gradient(135deg,#67e8f9,#0077b6); box-shadow: 0 2px 0 #003d5c; }
+.status-indicator.status-stunned    { background: linear-gradient(135deg,#d4b060,#8b6914); box-shadow: 0 2px 0 #4a3020; }
+.status-indicator.status-crushed    { background: linear-gradient(135deg,#fb923c,#c2410c); box-shadow: 0 2px 0 #7c2d12; }
+.status-indicator.status-poisoned   { background: linear-gradient(135deg,#c084fc,#7e22ce); box-shadow: 0 2px 0 #3b0764; }
+.status-indicator.status-grounded   { background: linear-gradient(135deg,#fbbf24,#b45309); box-shadow: 0 2px 0 #713f12; }
+.status-indicator.status-swept      { background: linear-gradient(135deg,#7dd3fc,#0284c7); box-shadow: 0 2px 0 #0c4a6e; }
+.status-indicator.status-swarmed    { background: linear-gradient(135deg,#86efac,#15803d); box-shadow: 0 2px 0 #14532d; }
+.status-indicator.status-intimidated{ background: linear-gradient(135deg,#78716c,#292524); box-shadow: 0 2px 0 #1c1917; }
+.status-indicator.status-impaled    { background: linear-gradient(135deg,#94a3b8,#334155); box-shadow: 0 2px 0 #0f172a; }
+.status-indicator.status-charmed    { background: linear-gradient(135deg,#f9a8d4,#db2777); box-shadow: 0 2px 0 #831843; }
 
 /* Status notifications in round result modal */
 .status-log {
@@ -1853,20 +1875,26 @@ body {
 }
 
 .floating-battle-text {
-    position: absolute;
+    position: fixed;
+    z-index: 9000;
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.28rem;
-    padding: 0.3rem 0.75rem;
-    border-radius: 2rem;
+    justify-content: center;
+    gap: 0.22rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 0.6rem;
     border: 2.5px solid #ffffff;
     font-family: 'Orbitron', sans-serif;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 900;
     letter-spacing: 0.02em;
     pointer-events: none;
-    z-index: 100;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    max-width: min(140px, calc(100vw - 24px));
+    text-align: center;
+    line-height: 1.35;
     text-shadow: none;
     animation: float-rpg 3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
@@ -2830,4 +2858,28 @@ body {
     border-color: var(--rpg-cta-top) !important;
     box-shadow: 0 4px 0 var(--rpg-cta-shadow), 0 0 18px rgba(255,195,18,0.45);
 }
+
+
+/* ── Arena z-index stack ── */
+/* 1: arena decorations (grid, corner flares) */
+.battle-arena::before, .battle-arena::after { z-index: 1; }
+/* 2: cards sit above decorations */
+.battle-arena .arena-content,
+.battle-arena .battle-vs { z-index: 2; position: relative; }
+.battle-pokemon { z-index: 2; }
+/* 3: card inner content above the card's own ::before glow */
+.battle-pokemon > * { z-index: 3; }
+/* 10: type flash overlay above cards */
+.type-effect-overlay { z-index: 10; }
+/* 20: advantage/status badges above cards */
+.battle-adv-badge, .status-badge, .defeat-overlay { z-index: 20; }
+/* 50: floating battle texts on top of everything inside the arena */
+.floating-battle-text { z-index: 50; }
+
+/* ── Arena: let cards show without clipping, no transform changes ── */
+#battle-screen .battle-arena { overflow: visible; }
+#battle-screen .battle-arena .type-effect-overlay { overflow: hidden; clip-path: inset(0 round 1.1rem); }
+
+/* Restore player sprite flip cleanly */
+#battle-screen .battle-vs .battle-pokemon.player-side .card-portrait-ring { transform: scaleX(-1); }
 

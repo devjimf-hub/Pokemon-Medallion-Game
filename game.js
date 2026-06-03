@@ -463,26 +463,25 @@ function triggerFloatingBattleTexts() {
             AudioEngine.play('status-effect');
             const status = info.prevPlayerStatus;
             if (status.type === 'paralyzed' && info.playerFinal === 0) {
-                createFloatingText(playerCardEl, '⚡ PARALYZED (→ 0)', 'weakness');
+                createFloatingText(playerCardEl, 'PARALYZED!', 'weakness');
             } else if (status.pointMod) {
-                createFloatingText(playerCardEl, `${status.pointMod} pts (${status.name})`, 'status-minus');
+                createFloatingText(playerCardEl, `${status.name} ${status.pointMod}`, 'status-minus');
             }
         }
         if (info.prevOpponentStatus) {
             AudioEngine.play('status-effect');
             const status = info.prevOpponentStatus;
             if (status.type === 'paralyzed' && info.opponentFinal === 0) {
-                createFloatingText(opponentCardEl, '⚡ PARALYZED (→ 0)', 'weakness');
+                createFloatingText(opponentCardEl, 'PARALYZED!', 'weakness');
             } else if (status.pointMod) {
-                createFloatingText(opponentCardEl, `${status.pointMod} pts (${status.name})`, 'status-minus');
+                createFloatingText(opponentCardEl, `${status.name} ${status.pointMod}`, 'status-minus');
             }
         }
     }, 850);
 }
 
 function createFloatingText(targetEl, text, className) {
-    const rect      = targetEl.getBoundingClientRect();
-    const arenaRect = elements.battleArena.getBoundingClientRect();
+    const rect = targetEl.getBoundingClientRect();
 
     const iconMap = {
         'advantage':    'trending-up',
@@ -495,13 +494,22 @@ function createFloatingText(targetEl, text, className) {
     el.className = `floating-battle-text float-${className}`;
     el.innerHTML = `<i data-lucide="${icon}" class="float-icon"></i><span>${text}</span>`;
 
-    const x = (rect.left + rect.width / 2) - arenaRect.left;
-    const y = rect.top - arenaRect.top + 20;
-    el.style.left = `${x}px`;
-    el.style.top  = `${y}px`;
-
-    elements.battleArena.appendChild(el);
+    // Render off-screen first to measure actual width
+    el.style.visibility = 'hidden';
+    el.style.top  = `${rect.top + 20}px`;
+    el.style.left = '-9999px';
+    document.body.appendChild(el);
     initializeLucideIcons(el);
+
+    // Clamp X so badge never overflows viewport edges
+    const halfW  = el.offsetWidth / 2;
+    const margin = 10;
+    let centerX  = rect.left + rect.width / 2;
+    centerX = Math.max(halfW + margin, Math.min(centerX, window.innerWidth - halfW - margin));
+
+    el.style.left = `${centerX}px`;
+    el.style.visibility = '';
+
     setTimeout(() => el.remove(), 3000);
 }
 
@@ -1464,34 +1472,43 @@ function animateBattleCardPointsFor(cardEl) {
 
 function triggerFloatingTextsForSide(side, playerCardEl, opponentCardEl, info) {
     if (!info) return;
-    const isPlayer  = side === 'player';
-    const hasAdv    = isPlayer ? info.playerAdv    : info.opponentAdv;
-    const targetEl  = isPlayer ? playerCardEl  : opponentCardEl;
-    const otherEl   = isPlayer ? opponentCardEl : playerCardEl;
+    const isPlayer = side === 'player';
+    const targetEl = isPlayer ? playerCardEl  : opponentCardEl;
+    const otherEl  = isPlayer ? opponentCardEl : playerCardEl;
+    const hasAdv   = isPlayer ? info.playerAdv : info.opponentAdv;
+
+    // Build a sequential queue: [ { el, text, cls, sfx? }, ... ]
+    const queue = [];
 
     if (hasAdv) {
-        AudioEngine.play('type-advantage');
-        if (targetEl) createFloatingText(targetEl, '+15 ADVANTAGE!', 'advantage');
-        if (otherEl)  createFloatingText(otherEl,  'WEAKNESS!',      'weakness');
+        queue.push({ el: targetEl, text: '+15 ADV!',  cls: 'advantage',    sfx: 'type-advantage' });
+        queue.push({ el: otherEl,  text: 'WEAKNESS!', cls: 'weakness' });
     }
 
     const prevStatus = isPlayer ? info.prevPlayerStatus : info.prevOpponentStatus;
     const finalPts   = isPlayer ? info.playerFinal      : info.opponentFinal;
     if (prevStatus) {
-        setTimeout(() => {
-            AudioEngine.play('status-effect');
-            if (prevStatus.type === 'paralyzed' && finalPts === 0) {
-                if (targetEl) createFloatingText(targetEl, '⚡ PARALYZED (→ 0)', 'weakness');
-            } else if (prevStatus.pointMod) {
-                if (targetEl) createFloatingText(targetEl, `${prevStatus.pointMod} pts (${prevStatus.name})`, 'status-minus');
-            }
-        }, 700);
+        const statusText = (prevStatus.type === 'paralyzed' && finalPts === 0)
+            ? 'PARALYZED!'
+            : prevStatus.pointMod ? `${prevStatus.name} ${prevStatus.pointMod}` : null;
+        if (statusText) queue.push({ el: targetEl, text: statusText, cls: prevStatus.type === 'paralyzed' ? 'weakness' : 'status-minus', sfx: 'status-effect' });
     }
 
     const abilityMsg = isPlayer ? info.playerAbilityMsg : info.opponentAbilityMsg;
     if (abilityMsg && targetEl) {
-        setTimeout(() => createFloatingText(targetEl, abilityMsg, 'advantage'), 1100);
+        const shortMsg = abilityMsg.includes(':') ? abilityMsg.split(':')[0].trim() + '!' : abilityMsg;
+        queue.push({ el: targetEl, text: shortMsg, cls: 'advantage' });
     }
+
+    // Show one by one with a stagger
+    const STAGGER = 650;
+    queue.forEach((item, i) => {
+        if (!item.el) return;
+        setTimeout(() => {
+            if (item.sfx) AudioEngine.play(item.sfx);
+            createFloatingText(item.el, item.text, item.cls);
+        }, i * STAGGER);
+    });
 }
 
 function startClashSequence() {
@@ -1789,7 +1806,8 @@ function spawnScoreOrb(winner) {
     }).onfinish = () => orb.remove();
 }
 
-// Resolves a single pokemon's special ability. Returns updated { selfPts, enemyPts, msg, newEnemyStatus }.
+// Resolves a pokemon's special ability.
+// Returns { selfPts, enemyPts, msg, newEnemyStatus }.
 function resolveAbility(self, enemy, selfPts, enemyPts, selfAdv, enemyAdv, enemyLabel, usedAbilities) {
     let sp = selfPts, ep = enemyPts, msg = null, newEnemyStatus = null;
     usedAbilities.push(self.name);
