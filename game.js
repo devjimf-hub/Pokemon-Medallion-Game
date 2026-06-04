@@ -674,7 +674,7 @@ function createPokemonCard(pokemon, context = 'collection') {
         <div class="card-header"><h3>${pokemon.name}</h3></div>
         <div class="card-portrait-ring">${portraitHTML(pokemon)}</div>
         <div class="card-footer">
-            <div class="card-cp"><i data-lucide="zap"></i><span>${pokemon.points}</span></div>
+            <div class="card-cp"><span class="cp-label">CP</span><span>${pokemon.points}</span></div>
             <div class="card-type-badge" data-type="${pokemon.type}">${typeIconHTML(pokemon.type)}</div>
         </div>
         ${overlayHtml}
@@ -717,8 +717,6 @@ function createBattlePokemonCard(pokemon, isWinner = false, side = 'player', for
 
     // ── CP / points section ──────────────────────────────────────
     let cpContent = `<span>${pokemon.points}</span>`;
-    let formulaHtml = '';
-    let advBadge = '';
 
     const shouldShowPoints = side === 'player' ? gameState.showPlayerPoints : gameState.showOpponentPoints;
     if (shouldShowPoints) {
@@ -736,26 +734,22 @@ function createBattlePokemonCard(pokemon, isWinner = false, side = 'player', for
                 else if (status.pointMod) formula += `${status.pointMod >= 0 ? '+' : ''}${status.pointMod}`;
             }
 
-            if (hasAdv)   { card.classList.add('has-advantage'); advBadge = `<div class="battle-adv-badge adv"><i data-lucide="flame"></i></div>`; }
-            else if (hasDisadv) advBadge = `<div class="battle-adv-badge disadv"><i data-lucide="alert-triangle"></i></div>`;
+            if (hasAdv) card.classList.add('has-advantage');
 
             cpContent = gameState.battleAnimation === 'battle'
                 ? `<span class="animated-points-val" data-start="${pokemon.points}" data-target="${finalPts}">${pokemon.points}</span>`
                 : `<span>${finalPts}</span>`;
-            formulaHtml = `<div class="battle-formula">(${formula})</div>`;
         }
     }
 
     card.innerHTML = `
         ${crownHtml}
-        ${advBadge}
         <div class="card-header"><h3>${pokemon.name}</h3></div>
         <div class="card-portrait-ring">${portraitHTML(pokemon)}</div>
         <div class="card-footer">
-            <div class="card-cp"><i data-lucide="zap"></i>${cpContent}</div>
+            <div class="card-cp"><span class="cp-label">CP</span>${cpContent}</div>
             <div class="card-type-badge">${typeIconHTML(pokemon.type)}</div>
         </div>
-        ${formulaHtml}
     `;
 
     // Status badge
@@ -837,7 +831,7 @@ function showPokemonRevealModal(pokemon) {
                                 <div class="card-header"><h3>${pokemon.name}</h3></div>
                                 <div class="card-portrait-ring">${portraitHTML(pokemon)}</div>
                                 <div class="card-footer">
-                                    <div class="card-cp"><i data-lucide="zap"></i><span>${pokemon.points}</span></div>
+                                    <div class="card-cp"><span class="cp-label">CP</span><span>${pokemon.points}</span></div>
                                     <div class="card-type-badge">${typeIconHTML(pokemon.type)}</div>
                                 </div>
                             </div>
@@ -1224,12 +1218,7 @@ function renderBattleArena() {
 
     if (gameState.battleAnimation === 'waiting' && !gameState.throwingAnimation) {
         if (!gameState.playerThrown && !gameState.opponentThrown) {
-            content.innerHTML = `
-                <div class="arena-text">
-                    <div class="arena-title"><i data-lucide="swords"></i> BATTLE ARENA <i data-lucide="swords"></i></div>
-                    <div class="arena-subtitle">${gameState.selectedPokemon ? `Tap to throw ${gameState.selectedPokemon.name}!` : 'Select a Pokemon below'}</div>
-                    ${gameState.selectedPokemon ? `<div class="arena-ready"><i data-lucide="target"></i> READY</div>` : ''}
-                </div>`;
+            content.innerHTML = '';
             content.className = 'arena-content';
             return;
         }
@@ -1630,19 +1619,32 @@ function startClashSequence() {
                 showBattleEffect(pokemon.type, opponentChoice.type);
                 triggerScreenFlash(winner);
 
+                const BOUNCE = 320;
+                const bounceBack = (el, chargeClass, bounceClass) => {
+                    el?.classList.replace(chargeClass, bounceClass);
+                    return new Promise(res => setTimeout(() => {
+                        el?.classList.remove(bounceClass);
+                        res();
+                    }, BOUNCE));
+                };
+                const throwLoser = (el, direction) => {
+                    if (!el) return;
+                    el.style.pointerEvents = 'none';
+                    AudioEngine.play('dissolve');
+                    el.classList.add(`knocked-out-${direction}`);
+                };
+
                 if (winner === 'player') {
-                    opponentCardEl?.classList.remove('charge-left');
-                    dissolveIntoLight(opponentCardEl);
-                    setTimeout(() => { playerCardEl?.classList.remove('charge-right'); dissolveIntoLight(playerCardEl); }, 900);
+                    // opponent (right side, charged left) → punted right on impact
+                    bounceBack(opponentCardEl, 'charge-left',  'bounce-back-left' ).then(() => throwLoser(opponentCardEl, 'right'));
+                    setTimeout(() => bounceBack(playerCardEl, 'charge-right', 'bounce-back-right').then(() => dissolveIntoLight(playerCardEl)), 900);
                 } else if (winner === 'opponent') {
-                    playerCardEl?.classList.remove('charge-right');
-                    dissolveIntoLight(playerCardEl);
-                    setTimeout(() => { opponentCardEl?.classList.remove('charge-left'); dissolveIntoLight(opponentCardEl); }, 900);
+                    // player (left side, charged right) → punted left on impact
+                    bounceBack(playerCardEl,   'charge-right', 'bounce-back-right').then(() => throwLoser(playerCardEl, 'left'));
+                    setTimeout(() => bounceBack(opponentCardEl, 'charge-left', 'bounce-back-left').then(() => dissolveIntoLight(opponentCardEl)), 900);
                 } else {
-                    playerCardEl?.classList.remove('charge-right');
-                    opponentCardEl?.classList.remove('charge-left');
-                    dissolveIntoLight(playerCardEl);
-                    dissolveIntoLight(opponentCardEl);
+                    bounceBack(playerCardEl,   'charge-right', 'bounce-back-right').then(() => dissolveIntoLight(playerCardEl));
+                    bounceBack(opponentCardEl, 'charge-left',  'bounce-back-left' ).then(() => dissolveIntoLight(opponentCardEl));
                 }
             }, 500);
         }, 500);
